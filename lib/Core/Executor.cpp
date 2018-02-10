@@ -3587,25 +3587,24 @@ void Executor::run(ExecutionState &initialState) {
 }
 
 std::string Executor::getAddressInfo(ExecutionState &state,
-                                     ref<Expr> segment,
-                                     ref<Expr> offset) const{
+                                     KValue address) const{
   std::string Str;
   llvm::raw_string_ostream info(Str);
   // TODO segment
-  info << "\taddress: " << offset << "\n";
+  info << "\taddress: " << address.getOffset() << "\n";
   uint64_t example;
-  if (ConstantExpr *CE = dyn_cast<ConstantExpr>(offset)) {
+  if (ConstantExpr *CE = dyn_cast<ConstantExpr>(address.getOffset())) {
     example = CE->getZExtValue();
   } else {
     ref<ConstantExpr> value;
-    bool success = solver->getValue(state.constraints, offset, value,
+    bool success = solver->getValue(state.constraints, address.getOffset(), value,
                                     state.queryMetaData);
     assert(success && "FIXME: Unhandled solver failure");
     (void) success;
     example = value->getZExtValue();
     info << "\texample: " << example << "\n";
     std::pair<ref<Expr>, ref<Expr>> res =
-        solver->getRange(state.constraints, offset, state.queryMetaData);
+        solver->getRange(state.constraints, address.getOffset(), state.queryMetaData);
     info << "\trange: [" << res.first << ", " << res.second <<"]\n";
   }
   
@@ -4152,11 +4151,11 @@ void Executor::executeFree(ExecutionState &state,
       if (mo->isLocal) {
         terminateStateOnError(*it->second, "free of alloca",
                               StateTerminationType::Free,
-                              getAddressInfo(*it->second, segment, address));
+                              getAddressInfo(*it->second, KValue(segment, address)));
       } else if (mo->isGlobal) {
         terminateStateOnError(*it->second, "free of global",
                               StateTerminationType::Free,
-                              getAddressInfo(*it->second, segment, address));
+                              getAddressInfo(*it->second, KValue(segment, address)));
       } else {
         it->second->addressSpace.unbindObject(mo);
         if (target)
@@ -4195,7 +4194,7 @@ void Executor::resolveExact(ExecutionState &state,
 
   if (unbound) {
     terminateStateOnError(*unbound, "memory error: invalid pointer: " + name,
-                          StateTerminationType::Ptr, getAddressInfo(*unbound, segment, offset));
+                          StateTerminationType::Ptr, getAddressInfo(*unbound, KValue(segment, offset)));
   }
 }
 
@@ -4359,7 +4358,7 @@ void Executor::executeMemoryOperation(ExecutionState &state,
     } else {
       terminateStateOnError(*unbound, "memory error: out of bound pointer",
                             StateTerminationType::Ptr,
-                            getAddressInfo(*unbound, addressSegment, addressOffset));
+                            getAddressInfo(*unbound, KValue(addressSegment, addressOffset)));
     }
   }
 }
