@@ -769,7 +769,8 @@ void Executor::allocateGlobalObjects(ExecutionState &state) {
     if (!mo)
       klee_error("out of memory");
     globalObjects.emplace(&v, mo);
-    globalAddresses.emplace(&v, mo->getBaseExpr());
+    // TODO segment?
+    globalAddresses.emplace(&v, cast<ConstantExpr>(mo->getPointer().getOffset()));
   }
 }
 
@@ -1850,7 +1851,7 @@ void Executor::executeCall(ExecutionState &state, KInstruction *ki, Function *f,
       Expr::Width WordSize = Context::get().getPointerWidth();
       if (WordSize == Expr::Int32) {
         // TODO value segment
-        executeMemoryWrite(state, arguments[0], KValue(sf.varargs->getBaseExpr()));
+        executeMemoryWrite(state, arguments[0], sf.varargs->getPointer());
       } else {
         assert(WordSize == Expr::Int64 && "Unknown word size!");
 
@@ -1867,7 +1868,7 @@ void Executor::executeCall(ExecutionState &state, KInstruction *ki, Function *f,
         address.setOffset(AddExpr::create(arguments[0].value,
                                           ConstantExpr::create(8, 64)));
         executeMemoryWrite(state, address,
-                           KValue(sf.varargs->getBaseExpr())); // overflow_arg_area
+                           sf.varargs->getPointer()); // overflow_arg_area
         address.setOffset(AddExpr::create(arguments[0].value,
                                           ConstantExpr::create(16, 64)));
         executeMemoryWrite(state, address,
@@ -4021,14 +4022,12 @@ void Executor::executeAlloc(ExecutionState &state,
       } else {
         os->initializeToRandom();
       }
-      // TODO segment
-      bindLocal(target, state, KValue(mo->getBaseExpr()));
+      bindLocal(target, state, mo->getPointer());
       
       if (reallocFrom) {
         unsigned count = std::min(reallocFrom->size, os->size);
         for (unsigned i=0; i<count; i++)
-          // TODO segment
-          os->write(i, KValue(reallocFrom->read8(i)));
+          os->write(i, reallocFrom->read8(i));
         state.addressSpace.unbindObject(reallocFrom->getObject());
       }
     }
@@ -4490,13 +4489,11 @@ void Executor::runFunctionAsMain(Function *f,
         if (!arg)
           klee_error("Could not allocate memory for function arguments");
         ObjectState *os = bindObjectInState(*state, arg, false);
-        // TODO segment
         for (j=0; j<len+1; j++)
           os->write8(j, 0, s[j]);
 
         // Write pointer to newly allocated and initialised argv/envp c-string
-        // TODO segment
-        argvOS->write(i * NumPtrBytes, KValue(arg->getBaseExpr()));
+        argvOS->write(i * NumPtrBytes, arg->getPointer());
       }
     }
   }
