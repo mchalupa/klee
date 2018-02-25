@@ -603,15 +603,14 @@ void Executor::initializeGlobalObject(ExecutionState &state, ObjectState *os,
   } else if (!isa<UndefValue>(c)) {
 #endif
     unsigned StoreBits = targetData->getTypeStoreSizeInBits(c->getType());
-    ref<ConstantExpr> C = evalConstant(c);
+    KValue C = evalConstant(c);
 
     // Extend the constant if necessary;
-    assert(StoreBits >= C->getWidth() && "Invalid store size!");
-    if (StoreBits > C->getWidth())
-      C = C->ZExt(StoreBits);
+    assert(StoreBits >= C.getWidth() && "Invalid store size!");
+    if (StoreBits > C.getWidth())
+      C.ZExt(StoreBits);
 
-    // TODO offset
-    os->write(offset, KValue(C));
+    os->write(offset, C);
   }
 }
 
@@ -655,7 +654,7 @@ void Executor::initializeGlobals(ExecutionState &state) {
       legalFunctions.insert(reinterpret_cast<std::uint64_t>(f));
     }
     
-    globalAddresses.insert(std::make_pair(f, addr));
+    globalAddresses.insert(std::make_pair(f, KValue(addr)));
   }
 
 #ifndef WINDOWS
@@ -737,8 +736,7 @@ void Executor::initializeGlobals(ExecutionState &state) {
                                           /*alignment=*/globalObjectAlignment);
       ObjectState *os = bindObjectInState(state, mo, false);
       globalObjects.insert(std::make_pair(v, mo));
-      // TODO segment?
-      globalAddresses.insert(std::make_pair(v, cast<ConstantExpr>(mo->getPointer().getOffset())));
+      globalAddresses.insert(std::make_pair(v, mo->getPointer()));
 
       // Program already running = object already initialized.  Read
       // concrete value and write it to our copy.
@@ -754,7 +752,6 @@ void Executor::initializeGlobals(ExecutionState &state) {
                      i->getName().data());
 
         for (unsigned offset=0; offset<size; offset++)
-          // TDOO segment
           os->write8(offset, 0, ((unsigned char*)addr)[offset]);
       }
     } else {
@@ -767,8 +764,7 @@ void Executor::initializeGlobals(ExecutionState &state) {
         llvm::report_fatal_error("out of memory");
       ObjectState *os = bindObjectInState(state, mo, false);
       globalObjects.insert(std::make_pair(v, mo));
-      // TODO segment?
-      globalAddresses.insert(std::make_pair(v, cast<ConstantExpr>(mo->getPointer().getOffset())));
+      globalAddresses.insert(std::make_pair(v, mo->getPointer()));
 
       if (!i->hasInitializer())
           os->initializeToRandom();
@@ -1873,7 +1869,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       for (SwitchInst::CaseIt i = si->case_begin(), e = si->case_end(); i != e;
            ++i) {
 #endif
-        ref<Expr> value = evalConstant(i.getCaseValue());
+        ref<Expr> value = evalConstant(i.getCaseValue()).getValue();
 
         BasicBlock *caseSuccessor = i.getCaseSuccessor();
         expressionOrder.insert(std::make_pair(value, caseSuccessor));
@@ -2792,7 +2788,7 @@ void Executor::computeOffsets(KGEPInstruction *kgepi, TypeIt ib, TypeIt ie) {
       Value *operand = ii.getOperand();
       if (Constant *c = dyn_cast<Constant>(operand)) {
         ref<ConstantExpr> index = 
-          evalConstant(c)->SExt(Context::get().getPointerWidth());
+          cast<ConstantExpr>(evalConstant(c).getValue())->SExt(Context::get().getPointerWidth());
         ref<ConstantExpr> addend = 
           index->Mul(ConstantExpr::alloc(elementSize,
                                          Context::get().getPointerWidth()));
@@ -2806,7 +2802,7 @@ void Executor::computeOffsets(KGEPInstruction *kgepi, TypeIt ib, TypeIt ie) {
         kmodule->targetData->getTypeStoreSize(ptr->getElementType());
       auto operand = ii.getOperand();
       if (auto c = dyn_cast<Constant>(operand)) {
-        auto index = evalConstant(c)->SExt(Context::get().getPointerWidth());
+        auto index = cast<ConstantExpr>(evalConstant(c).getValue())->SExt(Context::get().getPointerWidth());
         auto addend = index->Mul(ConstantExpr::alloc(elementSize,
                                          Context::get().getPointerWidth()));
         constantOffset = constantOffset->Add(addend);
@@ -2846,8 +2842,7 @@ void Executor::bindModuleConstants() {
       std::unique_ptr<Cell[]>(new Cell[kmodule->constants.size()]);
   for (unsigned i=0; i<kmodule->constants.size(); ++i) {
     Cell &c = kmodule->constantTable[i];
-    c.value = evalConstant(kmodule->constants[i]);
-    c.pointerSegment = ConstantExpr::create(0, c.value->getWidth());
+    c = evalConstant(kmodule->constants[i]);
   }
 }
 
