@@ -15,7 +15,9 @@
 #include "klee/Expr/ExprEvaluator.h"
 #include "klee/Expr/ExprRangeEvaluator.h"
 #include "klee/Expr/ExprVisitor.h"
+#include "klee/Expr/SizeVisitor.h"
 #include "klee/Solver/IncompleteSolver.h"
+
 #include "klee/Support/Debug.h"
 #include "klee/Support/IntEvaluation.h" // FIXME: Use APInt
 
@@ -1093,6 +1095,16 @@ bool FastCexSolver::computeValue(const Query& query, ref<Expr> &result) {
   }
 }
 
+class CexSizeVisitor : public SizeVisitor {
+private:
+  CexData &cd;
+public:
+  CexSizeVisitor(CexData &cd) : cd(cd) {}
+  ref<Expr> evaluate(ref<Expr> expr) {
+    return cd.evaluatePossible(expr);
+  }
+};
+
 bool
 FastCexSolver::computeInitialValues(const Query& query,
                                     const std::vector<const Array*>
@@ -1113,14 +1125,18 @@ FastCexSolver::computeInitialValues(const Query& query,
   if (!hasSolution)
     return true;
 
-  // propagation found a satisfying assignment, compute the initial values.
+  CexSizeVisitor sizeVisitor(cd);
+  sizeVisitor.visitQuery(query);
+
+  // Propogation found a satisfying assignment, compute the initial values.
   for (unsigned i = 0; i != objects.size(); ++i) {
     const Array *array = objects[i];
     assert(array);
+    uint64_t size = sizeVisitor.sizes[array];
     std::vector<unsigned char> data;
-    data.reserve(array->size);
+    data.reserve(size);
 
-    for (unsigned i=0; i < array->size; i++) {
+    for (unsigned i=0; i < size; i++) {
       ref<Expr> read = 
         ReadExpr::create(UpdateList(array, 0),
                          ConstantExpr::create(i, array->getDomain()));
