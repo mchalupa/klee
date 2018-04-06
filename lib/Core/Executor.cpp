@@ -133,6 +133,11 @@ cl::opt<bool> EmitAllErrors(
              "(default=false, i.e. one per (error,instruction) pair)"),
     cl::cat(TestGenCat));
 
+cl::opt<bool> CheckLeaks(
+    "check-leaks", cl::init(false),
+    cl::desc("Check for memory leaks"),
+    cl::cat(TestGenCat));
+
 
 /* Constraint solving options */
 
@@ -417,6 +422,7 @@ const char *Executor::TerminateReasonNames[] = {
   [ Exec ] = "exec",
   [ External ] = "external",
   [ Free ] = "free",
+  [ Leak ] = "leak",
   [ Model ] = "model",
   [ Overflow ] = "overflow",
   [ Ptr ] = "ptr",
@@ -3092,12 +3098,28 @@ void Executor::terminateStateEarly(ExecutionState &state,
   terminateState(state);
 }
 
+static bool hasMemoryLeaks(ExecutionState &state) {
+    for (auto& object : state.addressSpace.objects) {
+        if (!object.first->isLocal && !object.first->isGlobal
+            && !object.first->isFixed) {
+            // => is heap-allocated
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void Executor::terminateStateOnExit(ExecutionState &state) {
-  if (ExitOnErrorType.empty() &&
-      (!OnlyOutputStatesCoveringNew || state.coveredNew ||
-      (AlwaysOutputSeeds && seedMap.count(&state))))
-    interpreterHandler->processTestCase(state, 0, 0);
-  terminateState(state);
+  if (CheckLeaks && hasMemoryLeaks(state)) {
+      terminateStateOnError(state, "memory error: memory leak detected", Leak);
+  } else {
+    if (ExitOnErrorType.empty() &&
+        (!OnlyOutputStatesCoveringNew || state.coveredNew ||
+        (AlwaysOutputSeeds && seedMap.count(&state))))
+      interpreterHandler->processTestCase(state, 0, 0);
+    terminateState(state);
+  }
 }
 
 const InstructionInfo & Executor::getLastNonKleeInternalInstruction(const ExecutionState &state,
