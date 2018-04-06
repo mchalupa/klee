@@ -27,19 +27,20 @@
   TTYPE(Assert, 11U, "assert.err")                                             \
   TTYPE(BadVectorAccess, 12U, "bad_vector_access.err")                         \
   TTYPE(Free, 13U, "free.err")                                                 \
-  TTYPE(Model, 14U, "model.err")                                               \
-  TTYPE(Overflow, 15U, "overflow.err")                                         \
-  TTYPE(Ptr, 16U, "ptr.err")                                                   \
-  TTYPE(ReadOnly, 17U, "read_only.err")                                        \
-  TTYPE(ReportError, 18U, "report_error.err")                                  \
-  TTYPE(InvalidBuiltin, 19U, "invalid_builtin_use.err")                        \
-  TTYPE(ImplicitTruncation, 20U, "implicit_truncation.err")                    \
-  TTYPE(ImplicitConversion, 21U, "implicit_conversion.err")                    \
-  TTYPE(UnreachableCall, 22U, "unreachable_call.err")                          \
-  TTYPE(MissingReturn, 23U, "missing_return.err")                              \
-  TTYPE(InvalidLoad, 24U, "invalid_load.err")                                  \
-  TTYPE(NullableAttribute, 25U, "nullable_attribute.err")                      \
-  MARK(PROGERR, 25U)                                                           \
+  TTYPE(Leak, 14U, "leak.err")                                                 \
+  TTYPE(Model, 15U, "model.err")                                               \
+  TTYPE(Overflow, 16U, "overflow.err")                                         \
+  TTYPE(Ptr, 17U, "ptr.err")                                                   \
+  TTYPE(ReadOnly, 18U, "read_only.err")                                        \
+  TTYPE(ReportError, 19U, "report_error.err")                                  \
+  TTYPE(InvalidBuiltin, 20U, "invalid_builtin_use.err")                        \
+  TTYPE(ImplicitTruncation, 21U, "implicit_truncation.err")                    \
+  TTYPE(ImplicitConversion, 22U, "implicit_conversion.err")                    \
+  TTYPE(UnreachableCall, 23U, "unreachable_call.err")                          \
+  TTYPE(MissingReturn, 24U, "missing_return.err")                              \
+  TTYPE(InvalidLoad, 25U, "invalid_load.err")                                  \
+  TTYPE(NullableAttribute, 26U, "nullable_attribute.err")                      \
+  MARK(PROGERR, 26U)                                                           \
   TTYPE(User, 33U, "user.err")                                                 \
   MARK(USERERR, 33U)                                                           \
   TTYPE(Execution, 35U, "exec.err")                                            \
