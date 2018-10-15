@@ -248,7 +248,7 @@ private:
   void callExternalFunction(ExecutionState &state,
                             KInstruction *target,
                             KCallable *callable,
-                            std::vector< ref<Expr> > &arguments);
+                            const std::vector<Cell> &arguments);
 
   ObjectState *bindObjectInState(ExecutionState &state, const MemoryObject *mo,
                                  bool isLocal, const Array *array = 0);
@@ -317,7 +317,7 @@ private:
   void executeCall(ExecutionState &state, 
                    KInstruction *ki,
                    llvm::Function *f,
-                   std::vector< ref<Expr> > &arguments);
+                   const std::vector<Cell> &arguments);
                    
   // do address resolution / object binding / out of bounds checking
   // and perform the operation
