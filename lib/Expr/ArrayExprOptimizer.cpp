@@ -272,7 +272,10 @@ ref<Expr> ExprOptimizer::getSelectOptExpr(
       if (info.second > width) {
         width = info.second;
       }
-      unsigned size = read->updates.root->getSize();
+      unsigned size = read->updates.root->getConstantSize();
+      if (size == 0) // symbolic-sized array
+          return e;
+
       unsigned bytesPerElement = width / 8;
       unsigned elementsInArray = size / bytesPerElement;
 
@@ -340,7 +343,7 @@ ref<Expr> ExprOptimizer::getSelectOptExpr(
       if (info.second > width) {
         width = info.second;
       }
-      unsigned size = read->updates.root->getSize();
+      unsigned size = read->updates.root->getConstantSize();
       unsigned bytesPerElement = width / 8;
       unsigned elementsInArray = size / bytesPerElement;
       bool symbArray = read->updates.root->isSymbolicArray();
