@@ -482,6 +482,7 @@ Executor::Executor(LLVMContext &ctx, const InterpreterOptions &opts,
       interpreterHandler->getOutputFilename(SOLVER_QUERIES_KQUERY_FILE_NAME));
 
   this->solver = new TimingSolver(solver, EqualitySubstitution);
+
   memory = new MemoryManager(&arrayCache);
 
   initializeSearchOptions();
@@ -572,6 +573,7 @@ Executor::setModule(std::vector<std::unique_ptr<llvm::Module>> &modules,
   DataLayout *TD = kmodule->targetData.get();
   Context::initialize(TD->isLittleEndian(),
                       (Expr::Width)TD->getPointerSizeInBits());
+  memory->useLowMemory(TD->getPointerSizeInBits() == 32);
 
   return kmodule->module.get();
 }
@@ -4416,7 +4418,7 @@ void Executor::runFunctionAsMain(Function *f,
 
   // hack to clear memory objects
   delete memory;
-  memory = new MemoryManager(NULL);
+  memory = new MemoryManager(nullptr, NumPtrBytes * 8);
 
   globalObjects.clear();
   globalAddresses.clear();
