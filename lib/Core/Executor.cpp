@@ -3859,7 +3859,7 @@ void Executor::callExternalFunction(ExecutionState &state,
             terminateStateOnExecError(state,
                                       "external call with symbolic-sized object that "
                                       "has no real virtual process memory: " +
-                                      function->getName());
+                                      callable->getName());
             return;
           }
           op.second->flushToConcreteStore(solver, state);
@@ -3889,7 +3889,7 @@ void Executor::callExternalFunction(ExecutionState &state,
             terminateStateOnExecError(state,
                                       "external call with symbolic-sized object that "
                                       "has no real virtual process memory: " +
-                                      function->getName());
+                                      callable->getName());
             return;
           }
 
