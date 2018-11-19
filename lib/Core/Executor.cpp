@@ -1655,6 +1655,19 @@ static inline const llvm::fltSemantics * fpWidthToSemantics(unsigned width) {
   }
 }
 
+ref<Expr> Executor::getSizeForAlloca(ExecutionState& state, KInstruction *ki) const {
+  AllocaInst *ai = cast<AllocaInst>(ki->inst);
+  unsigned elementSize =
+    kmodule->targetData->getTypeStoreSize(ai->getAllocatedType());
+  ref<Expr> size = Expr::createPointer(elementSize);
+  if (ai->isArrayAllocation()) {
+    ref<Expr> count = eval(ki, 0, state).value;
+    count = Expr::createZExtToPointerWidth(count);
+    size = MulExpr::create(size, count);
+  }
+  return size;
+}
+
 void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
   Instruction *i = ki->inst;
   switch (i->getOpcode()) {
@@ -2263,16 +2276,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
  
     // Memory instructions...
   case Instruction::Alloca: {
-    AllocaInst *ai = cast<AllocaInst>(i);
-    unsigned elementSize = 
-      kmodule->targetData->getTypeStoreSize(ai->getAllocatedType());
-    ref<Expr> size = Expr::createPointer(elementSize);
-    if (ai->isArrayAllocation()) {
-      ref<Expr> count = eval(ki, 0, state).value;
-      count = Expr::createZExtToPointerWidth(count);
-      size = MulExpr::create(size, count);
-    }
-    executeAlloc(state, size, true, ki);
+    executeAlloc(state, getSizeForAlloca(state, ki), true, ki);
     break;
   }
 
