@@ -1420,7 +1420,8 @@ void Executor::executeLifetimeIntrinsic(ExecutionState &state,
   // written before)
 
   if (isEnd) {
-    state.addressSpace.unbindObject(op.first);
+    state.removeAlloca(op.first);
+    //bindLocal(allocSite, state, KValue(Expr::createPointer(0)));
   } else {
     // This is the first call to lifetime start, the object already exists.
     // We do not want to reallocate it as there may exist pointers to it
