@@ -798,6 +798,8 @@ static const char *modelledExternals[] = {
   "_Znwj",
   "_Znam",
   "_Znwm",
+  "__VERIFIER_scope_enter",
+  "__VERIFIER_scope_leave",
 };
 
 // Symbols we aren't going to warn about
