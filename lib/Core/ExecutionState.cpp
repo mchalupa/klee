@@ -84,6 +84,11 @@ ExecutionState::ExecutionState(const std::vector<ref<Expr> > &assumptions)
     : constraints(assumptions), ptreeNode(0) {}
 
 ExecutionState::~ExecutionState() {
+  for (auto& it : identifiedNondetObjects)
+    for (auto mo : it.second)
+      --mo->refCount;
+
+
   for (unsigned int i=0; i<symbolics.size(); i++)
   {
     const MemoryObject *mo = symbolics[i].first;
@@ -131,6 +136,10 @@ ExecutionState::ExecutionState(const ExecutionState& state):
 {
   for (unsigned int i=0; i<symbolics.size(); i++)
     symbolics[i].first->refCount++;
+
+  for (auto& it : identifiedNondetObjects)
+    for (auto mo : it.second)
+      ++mo->refCount;
 
   for (auto cur_mergehandler: openMergeStack)
     cur_mergehandler->addOpenState(this);
@@ -189,6 +198,15 @@ void ExecutionState::addSymbolic(const MemoryObject *mo, const Array *array) {
   mo->refCount++;
   symbolics.push_back(std::make_pair(mo, array));
 }
+
+size_t ExecutionState::addIdentifiedSymbolic(unsigned identifier,
+                                             const MemoryObject *mo) {
+  mo->refCount++;
+  auto& S = identifiedNondetObjects[identifier];
+  S.push_back(mo);
+  return S.size();
+}
+
 ///
 
 std::string ExecutionState::getFnAlias(std::string fn) {
