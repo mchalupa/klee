@@ -856,6 +856,18 @@ Executor::fork(ExecutionState &current, ref<Expr> condition, bool isInternal) {
   return regularFork(current, condition, isInternal);
 }
 
+
+static void updatePTree(PTree *processTree,
+                        ExecutionState& current,
+                        ExecutionState* trueState,
+                        ExecutionState* falseState) {
+  current.ptreeNode->data = 0;
+  auto children =
+    processTree->split(current.ptreeNode, falseState, trueState);
+  falseState->ptreeNode = children.first;
+  trueState->ptreeNode = children.second;
+}
+
 Executor::StatePair
 Executor::regularFork(ExecutionState &current, ref<Expr> condition, bool isInternal) {
   assert(seedMap.find(&current) == seedMap.end());
@@ -978,11 +990,7 @@ Executor::regularFork(ExecutionState &current, ref<Expr> condition, bool isInter
   falseState = trueState->branch();
   addedStates.push_back(falseState);
 
-  current.ptreeNode->data = 0;
-  auto children =
-    processTree->split(current.ptreeNode, falseState, trueState);
-  falseState->ptreeNode = children.first;
-  trueState->ptreeNode = children.second;
+  updatePTree(processTree, current, trueState, falseState);
 
   if (pathWriter) {
     // Need to update the pathOS.id field of falseState, otherwise the same id
@@ -1123,11 +1131,7 @@ Executor::seedingFork(ExecutionState &current, ref<Expr> condition,
     std::swap(trueState->coveredLines, falseState->coveredLines);
   }
 
-  current.ptreeNode->data = 0;
-  auto children =
-    processTree->split(current.ptreeNode, falseState, trueState);
-  falseState->ptreeNode = children.first;
-  trueState->ptreeNode = children.second;
+  updatePTree(processTree, current, trueState, falseState);
 
   if (pathWriter) {
     // Need to update the pathOS.id field of falseState, otherwise the same id
