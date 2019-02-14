@@ -865,7 +865,7 @@ Executor::doBranching(ExecutionState &current, ref<Expr> condition, bool isInter
   if (MaxDepth && MaxDepth<=trueState->depth) {
     terminateStateEarly(*trueState, "max-depth exceeded.");
     terminateStateEarly(*falseState, "max-depth exceeded.");
-    return StatePair(0, 0);
+    return StatePair(nullptr, nullptr);
   }
 
   return StatePair(trueState, falseState);
@@ -887,7 +887,7 @@ static void updatePTree(PTree *processTree,
                         ExecutionState& current,
                         ExecutionState* trueState,
                         ExecutionState* falseState) {
-  current.ptreeNode->data = 0;
+  current.ptreeNode->data = nullptr;
   auto children =
     processTree->split(current.ptreeNode, falseState, trueState);
   falseState->ptreeNode = children.first;
@@ -939,13 +939,13 @@ followOneBranch(ExecutionState &current,
       current.pathOS << "1";
     }
 
-    return Executor::StatePair(&current, 0);
+    return Executor::StatePair(&current, nullptr);
   } else if (res==Solver::False) {
     if (pathWriter) {
       current.pathOS << "0";
     }
 
-    return Executor::StatePair(0, &current);
+    return Executor::StatePair(nullptr, &current);
   } else
     abort();
 }
@@ -997,7 +997,7 @@ Executor::regularFork(ExecutionState &current, ref<Expr> condition, bool isInter
   if (!solveCondition(current, condition, res, solver, coreSolverTimeout)) {
     current.pc = current.prevPC;
     terminateStateEarly(current, "Query timed out (fork).");
-    return StatePair(0, 0);
+    return StatePair(nullptr, nullptr);
   }
 
   if (replayPath && !isInternal) {
@@ -1029,13 +1029,13 @@ Executor::regularFork(ExecutionState &current, ref<Expr> condition, bool isInter
         (MaxForks!=~0u && stats::forks >= MaxForks)) {
 
       if (MaxMemoryInhibit && atMemoryLimit)
-        klee_warning_once(0, "skipping fork (memory cap exceeded)");
+        klee_warning_once(nullptr, "skipping fork (memory cap exceeded)");
       else if (current.forkDisabled)
-        klee_warning_once(0, "skipping fork (fork disabled on current path)");
+        klee_warning_once(nullptr, "skipping fork (fork disabled on current path)");
       else if (inhibitForking)
-        klee_warning_once(0, "skipping fork (fork disabled globally)");
+        klee_warning_once(nullptr, "skipping fork (fork disabled globally)");
       else
-        klee_warning_once(0, "skipping fork (max-forks reached)");
+        klee_warning_once(nullptr, "skipping fork (max-forks reached)");
 
       // we will not fork, but follow at least a random path
       TimerStatIncrementer timer(stats::forkTime);
@@ -1067,7 +1067,7 @@ Executor::seedingFork(ExecutionState &current, ref<Expr> condition,
                       coreSolverTimeout * seeds.size())) {
     current.pc = current.prevPC;
     terminateStateEarly(current, "Query timed out (fork).");
-    return StatePair(0, 0); // solver timeout
+    return StatePair(nullptr, nullptr); // solver timeout
   }
 
   // Fix branch in only-replay-seed mode, if we don't have both true
@@ -1110,7 +1110,7 @@ Executor::seedingFork(ExecutionState &current, ref<Expr> condition,
   if (!trueState) {
       assert(!falseState);
       // max-depth hit
-      return StatePair(0, 0);
+      return StatePair(nullptr, nullptr);
   }
 
   std::vector<SeedInfo> seedsCopy = seeds;
