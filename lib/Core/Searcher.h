@@ -33,7 +33,7 @@ namespace klee {
 
   class Searcher {
   public:
-    virtual ~Searcher();
+    virtual ~Searcher() = default;
 
     virtual ExecutionState &selectState() = 0;
 

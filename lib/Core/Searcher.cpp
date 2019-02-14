@@ -48,9 +48,6 @@ namespace klee {
   extern RNG theRNG;
 }
 
-Searcher::~Searcher() {
-}
-
 ///
 
 ExecutionState &DFSSearcher::selectState() {
