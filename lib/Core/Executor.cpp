@@ -868,6 +868,31 @@ static void updatePTree(PTree *processTree,
   trueState->ptreeNode = children.second;
 }
 
+void Executor::logNewStates(ExecutionState& current,
+                            ExecutionState *trueState,
+                            ExecutionState *falseState,
+                            bool isInternal) {
+
+  updatePTree(processTree, current, trueState, falseState);
+
+  if (pathWriter) {
+    // Need to update the pathOS.id field of falseState, otherwise the same id
+    // is used for both falseState and trueState.
+    falseState->pathOS = pathWriter->open(current.pathOS);
+    if (!isInternal) {
+      trueState->pathOS << "1";
+      falseState->pathOS << "0";
+    }
+  }
+  if (symPathWriter) {
+    falseState->symPathOS = symPathWriter->open(current.symPathOS);
+    if (!isInternal) {
+      trueState->symPathOS << "1";
+      falseState->symPathOS << "0";
+    }
+  }
+}
+
 Executor::StatePair
 Executor::regularFork(ExecutionState &current, ref<Expr> condition, bool isInternal) {
   assert(seedMap.find(&current) == seedMap.end());
@@ -990,24 +1015,7 @@ Executor::regularFork(ExecutionState &current, ref<Expr> condition, bool isInter
   falseState = trueState->branch();
   addedStates.push_back(falseState);
 
-  updatePTree(processTree, current, trueState, falseState);
-
-  if (pathWriter) {
-    // Need to update the pathOS.id field of falseState, otherwise the same id
-    // is used for both falseState and trueState.
-    falseState->pathOS = pathWriter->open(current.pathOS);
-    if (!isInternal) {
-      trueState->pathOS << "1";
-      falseState->pathOS << "0";
-    }
-  }
-  if (symPathWriter) {
-    falseState->symPathOS = symPathWriter->open(current.symPathOS);
-    if (!isInternal) {
-      trueState->symPathOS << "1";
-      falseState->symPathOS << "0";
-    }
-  }
+  logNewStates(current, trueState, falseState, isInternal);
 
   addConstraint(*trueState, condition);
   addConstraint(*falseState, Expr::createIsZero(condition));
@@ -1131,24 +1139,7 @@ Executor::seedingFork(ExecutionState &current, ref<Expr> condition,
     std::swap(trueState->coveredLines, falseState->coveredLines);
   }
 
-  updatePTree(processTree, current, trueState, falseState);
-
-  if (pathWriter) {
-    // Need to update the pathOS.id field of falseState, otherwise the same id
-    // is used for both falseState and trueState.
-    falseState->pathOS = pathWriter->open(current.pathOS);
-    if (!isInternal) {
-      trueState->pathOS << "1";
-      falseState->pathOS << "0";
-    }
-  }
-  if (symPathWriter) {
-    falseState->symPathOS = symPathWriter->open(current.symPathOS);
-    if (!isInternal) {
-      trueState->symPathOS << "1";
-      falseState->symPathOS << "0";
-    }
-  }
+  logNewStates(current, trueState, falseState, isInternal);
 
   addConstraint(*trueState, condition);
   addConstraint(*falseState, Expr::createIsZero(condition));
