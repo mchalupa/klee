@@ -846,6 +846,32 @@ void Executor::branch(ExecutionState &state,
       addConstraint(*result[i], conditions[i]);
 }
 
+Executor::StatePair
+Executor::doBranching(ExecutionState &current, ref<Expr> condition, bool isInternal) {
+  TimerStatIncrementer timer(stats::forkTime);
+  ExecutionState *falseState, *trueState = &current;
+
+  ++stats::forks;
+
+  falseState = trueState->branch();
+  addedStates.push_back(falseState);
+
+  logNewStates(current, trueState, falseState, isInternal);
+
+  addConstraint(*trueState, condition);
+  addConstraint(*falseState, Expr::createIsZero(condition));
+
+  // Kinda gross, do we even really still want this option?
+  if (MaxDepth && MaxDepth<=trueState->depth) {
+    terminateStateEarly(*trueState, "max-depth exceeded.");
+    terminateStateEarly(*falseState, "max-depth exceeded.");
+    return StatePair(0, 0);
+  }
+
+  return StatePair(trueState, falseState);
+}
+
+
 Executor::StatePair 
 Executor::fork(ExecutionState &current, ref<Expr> condition, bool isInternal) {
   auto it = seedMap.find(&current);
@@ -1007,27 +1033,7 @@ Executor::regularFork(ExecutionState &current, ref<Expr> condition, bool isInter
     return StatePair(0, &current);
   }
 
-  TimerStatIncrementer timer(stats::forkTime);
-  ExecutionState *falseState, *trueState = &current;
-
-  ++stats::forks;
-
-  falseState = trueState->branch();
-  addedStates.push_back(falseState);
-
-  logNewStates(current, trueState, falseState, isInternal);
-
-  addConstraint(*trueState, condition);
-  addConstraint(*falseState, Expr::createIsZero(condition));
-
-  // Kinda gross, do we even really still want this option?
-  if (MaxDepth && MaxDepth<=trueState->depth) {
-    terminateStateEarly(*trueState, "max-depth exceeded.");
-    terminateStateEarly(*falseState, "max-depth exceeded.");
-    return StatePair(0, 0);
-  }
-
-  return StatePair(trueState, falseState);
+  return doBranching(current, condition, isInternal);
 }
 
 Executor::StatePair
@@ -1100,13 +1106,14 @@ Executor::seedingFork(ExecutionState &current, ref<Expr> condition,
     return StatePair(0, &current);
   }
 
-  TimerStatIncrementer timer(stats::forkTime);
-  ExecutionState *falseState, *trueState = &current;
+  ExecutionState *falseState, *trueState;
+  std::tie(trueState, falseState) = doBranching(current, condition, isInternal);
 
-  ++stats::forks;
-
-  falseState = trueState->branch();
-  addedStates.push_back(falseState);
+  if (!trueState) {
+      assert(!falseState);
+      // max-depth hit
+      return StatePair(0, 0);
+  }
 
   std::vector<SeedInfo> seedsCopy = seeds;
   seeds.clear();
@@ -1137,18 +1144,6 @@ Executor::seedingFork(ExecutionState &current, ref<Expr> condition,
   if (swapInfo) {
     std::swap(trueState->coveredNew, falseState->coveredNew);
     std::swap(trueState->coveredLines, falseState->coveredLines);
-  }
-
-  logNewStates(current, trueState, falseState, isInternal);
-
-  addConstraint(*trueState, condition);
-  addConstraint(*falseState, Expr::createIsZero(condition));
-
-  // Kinda gross, do we even really still want this option?
-  if (MaxDepth && MaxDepth<=trueState->depth) {
-    terminateStateEarly(*trueState, "max-depth exceeded.");
-    terminateStateEarly(*falseState, "max-depth exceeded.");
-    return StatePair(0, 0);
   }
 
   return StatePair(trueState, falseState);
