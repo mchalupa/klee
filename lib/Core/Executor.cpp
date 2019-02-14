@@ -1036,10 +1036,10 @@ Executor::fork(ExecutionState &current, ref<Expr> condition, bool isInternal) {
     }
 
     current.ptreeNode->data = 0;
-    std::pair<PTree::Node*, PTree::Node*> res =
+    auto children =
       processTree->split(current.ptreeNode, falseState, trueState);
-    falseState->ptreeNode = res.first;
-    trueState->ptreeNode = res.second;
+    falseState->ptreeNode = children.first;
+    trueState->ptreeNode = children.second;
 
     if (pathWriter) {
       // Need to update the pathOS.id field of falseState, otherwise the same id
