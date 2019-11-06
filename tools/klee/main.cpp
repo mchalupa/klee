@@ -807,6 +807,7 @@ static const char *modelledExternals[] = {
   "_Znwm",
   "__VERIFIER_scope_enter",
   "__VERIFIER_scope_leave",
+  "__VERIFIER_nondet_int",
 };
 
 // Symbols we aren't going to warn about
