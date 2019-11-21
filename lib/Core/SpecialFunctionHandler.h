@@ -156,6 +156,7 @@ namespace klee {
     HANDLER(handleVerifierNondetInt);
     HANDLER(handleVerifierNondetUInt);
     HANDLER(handleVerifierNondetBool);
+    HANDLER(handleVerifierNondet_Bool);
     HANDLER(handleVerifierNondetChar);
     HANDLER(handleVerifierNondetUChar);
     HANDLER(handleVerifierNondetFloat);
