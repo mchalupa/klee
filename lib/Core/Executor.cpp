@@ -4091,21 +4091,43 @@ static std::set<std::string> okExternals(okExternalsList,
                                          okExternalsList + 
                                          (sizeof(okExternalsList)/sizeof(okExternalsList[0])));
 
+// these are not and may introduce incorrect results.
+// Fail on these if the policy is Pure (for None, the call will fail anyway
+// and for All... well, the user wanted that...)
+static std::set<std::string> nokExternals({"fesetround", "fesetenv",
+                                           "feenableexcept", "fedisableexcept",
+                                           "feupdateenv", "fesetexceptflag",
+                                           "feclearexcept", "feraiseexcept"});
+
 void Executor::callExternalFunction(ExecutionState &state,
                                     KInstruction *target,
                                     KCallable *callable,
                                     const std::vector<Cell> &arguments) {
   // check if specialFunctionHandler wants it
-  if (const auto *func = dyn_cast<KFunction>(callable)) {
+  const auto *func = dyn_cast<KFunction>(callable);
+  if (func) {
     if (specialFunctionHandler->handle(state, func->function, target, arguments))
       return;
   }
 
   if (ExternalCalls == ExternalCallPolicy::Pure &&
-      !okExternals.count(function->getName().str())) {
+      nokExternals.count(callable->getName().str()) > 0) {
+    terminateStateOnUserError(state, "failed external call");
+    return;
+  }
 
-    auto retTy = function->getReturnType();
-    if (retTy->isVoidTy()) {
+  if (ExternalCalls == ExternalCallPolicy::None &&
+      !okExternals.count(callable->getName().str())) {
+    klee_warning("Disallowed call to external function: %s\n",
+                 callable->getName().str().c_str());
+    terminateStateOnUserError(state, "external calls disallowed");
+    return;
+  }
+
+  if (ExternalCalls == ExternalCallPolicy::Pure &&
+      !okExternals.count(callable->getName().str())) {
+    auto *retTy = func->function->getReturnType();
+    if (!func || retTy->isVoidTy()) {
         //klee_warning_once(target, "Skipping call of undefined function: %s",
         //                  function->getName().str().c_str());
         return;
@@ -4117,7 +4139,7 @@ void Executor::callExternalFunction(ExecutionState &state,
     auto size = DL.getTypeAllocSizeInBits(retTy);
     if (size > 64) {
         klee_warning_once(target, "Undefined function returns > 64bit object: %s",
-                          function->getName().str().c_str());
+                          callable->getName().str().c_str());
         terminateStateOnUserError(state, "failed external call");
         return;
     }
@@ -4126,14 +4148,14 @@ void Executor::callExternalFunction(ExecutionState &state,
     if (retTy->isPointerTy()) {
         isPointer = true;
         klee_warning_once(target, "Returning nondet pointer: %s",
-                         function->getName().str().c_str());
+                          callable->getName().str().c_str());
     }
     auto nv = createNondetValue(state, size, false,
-                                target, function->getName().str(),
+                                target, callable->getName().str(),
                                 isPointer);
     bindLocal(target, state, nv);
     klee_warning_once(target, "Assume that the undefined function %s is pure",
-                      function->getName().str().c_str());
+                      callable->getName().str().c_str());
 
     return;
   }
@@ -5119,7 +5141,7 @@ size_t Executor::getAllocationAlignment(const llvm::Value *allocSite) const {
       allocationSiteName = fn->getName().str();
 
     if (allocationSiteName.compare(0, 17, "__VERIFIER_nondet") == 0) {
-        type = cs.getType();
+        type = cb.getType();
         alignment = 0;
     } else {
       klee_warning_once(fn != NULL ? fn : allocSite,
