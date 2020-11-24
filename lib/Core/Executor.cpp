@@ -4099,7 +4099,7 @@ void Executor::terminateStateOnError(ExecutionState &state,
   Instruction * lastInst;
   const InstructionInfo &ii = getLastNonKleeInternalInstruction(state, &lastInst);
 
-  if (CheckMemCleanup) {
+  if (CheckMemCleanup && terminationType != StateTerminationType::Leak) {
     auto leaks = getMemoryLeaks(state);
     if (!leaks.empty()) {
       std::string info = "";
@@ -4112,7 +4112,8 @@ void Executor::terminateStateOnError(ExecutionState &state,
         klee_message("ERROR: %s:%d: %s", ii.file.c_str(), ii.line, message.c_str());
         reportError(message, state, info, suffix, terminationType);
       }
-      return terminateState(state);
+      if (shouldExitOn(StateTerminationType::Leak))
+        haltExecution = true;
     }
   }
 
