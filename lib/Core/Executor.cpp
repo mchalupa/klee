@@ -4418,7 +4418,7 @@ void Executor::callExternalFunction(ExecutionState &state,
             return;
           }
 
-          klee_warning("passing pointer to external call, may not work properly");
+          klee_warning_once(function,"passing pointer to external call, may not work properly");
         }
       }
 
