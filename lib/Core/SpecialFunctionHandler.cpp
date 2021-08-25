@@ -174,6 +174,8 @@ static SpecialFunctionHandler::HandlerInfo handlerInfo[] = {
   // operator new(unsigned long)
   add("_Znwm", handleNew, true),
 
+  add("pthread_create", handlePthreadCreate, false),
+
 #undef addDNR
 #undef add
 };
@@ -1301,3 +1303,11 @@ void SpecialFunctionHandler::handleMarkGlobal(ExecutionState &state,
     mo->isGlobal = true;
   }
 }
+
+void SpecialFunctionHandler::handlePthreadCreate(ExecutionState &state,
+                                                 KInstruction *target,
+                                                 const std::vector<Cell> &arguments) {
+  executor.terminateStateOnExecError(state,
+        "Call to pthread_create.");
+}
+
