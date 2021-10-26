@@ -1249,7 +1249,7 @@ void SpecialFunctionHandler::handleVerifierNondetShort(ExecutionState &state,
   assert(arguments.empty() && "Wrong number of arguments");
 
   handleVerifierNondetType(state, target, Expr::Int16,
-                           /* isSigned = */ true, "__VERIFIER_nondet_ushort");
+                           /* isSigned = */ true, "__VERIFIER_nondet_short");
 }
 
 void SpecialFunctionHandler::handleVerifierNondetSizeT(ExecutionState &state,
