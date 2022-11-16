@@ -4309,13 +4309,6 @@ void Executor::callExternalFunction(ExecutionState &state,
 
     DataLayout& DL = *kmodule->targetData;
     auto size = DL.getTypeAllocSizeInBits(retTy);
-    if (size > 64) {
-        klee_warning_once(target, "Undefined function returns > 64bit object: %s",
-                          callable->getName().str().c_str());
-        terminateStateOnUserError(state, "failed external call");
-        return;
-    }
-
     bool isPointer = false;
     if (retTy->isPointerTy()) {
         isPointer = true;

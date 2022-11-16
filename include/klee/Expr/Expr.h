@@ -718,7 +718,16 @@ public:
 			   const ref<Expr> &kid3, const ref<Expr> &kid4,
 			   const ref<Expr> &kid5, const ref<Expr> &kid6,
 			   const ref<Expr> &kid7, const ref<Expr> &kid8);
-  
+
+  static ref<Expr> create16(const ref<Expr> &kid1, const ref<Expr> &kid2,
+			                const ref<Expr> &kid3, const ref<Expr> &kid4,
+			                const ref<Expr> &kid5, const ref<Expr> &kid6,
+			                const ref<Expr> &kid7, const ref<Expr> &kid8,
+                            const ref<Expr> &kid9, const ref<Expr> &kid10,
+			                const ref<Expr> &kid11, const ref<Expr> &kid12,
+			                const ref<Expr> &kid13, const ref<Expr> &kid14,
+			                const ref<Expr> &kid15, const ref<Expr> &kid16);
+
   virtual ref<Expr> rebuild(ref<Expr> kids[]) const { return create(kids[0], kids[1]); }
   
 private:
