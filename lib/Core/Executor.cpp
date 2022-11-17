@@ -850,7 +850,13 @@ void Executor::initializeGlobalObjects(ExecutionState &state) {
     MemoryObject *mo = globalObjects.find(&v)->second;
     ObjectState *os = bindObjectInState(state, mo, false);
 
-    if (v.isDeclaration() && cast<ConstantExpr>(mo->size)->getZExtValue()) {
+    auto sizeCE = dyn_cast<ConstantExpr>(mo->size);
+    if (sizeCE == nullptr) {
+        klee_error("Unhandled size of global variable");
+    }
+
+    auto size = sizeCE->getZExtValue();
+    if (v.isDeclaration() && size) {
       // Program already running -> object already initialized.
       // Read concrete value and write it to our copy.
       void *addr;
@@ -860,11 +866,23 @@ void Executor::initializeGlobalObjects(ExecutionState &state) {
         addr = externalDispatcher->resolveSymbol(v.getName().str());
       }
       if (!addr) {
-        klee_error("Unable to load symbol(%.*s) while initializing globals",
+        klee_warning("Making external global %.*s symbolic",
                    static_cast<int>(v.getName().size()), v.getName().data());
-      }
-      for (unsigned offset = 0; offset < cast<ConstantExpr>(mo->size)->getZExtValue(); offset++) {
-        os->write8(offset, 0, static_cast<unsigned char *>(addr)[offset]);
+        // Find a unique name for this array.  First try the original name,
+        // or if that fails try adding a unique identifier.
+        unsigned id = 0;
+        auto name = v.getName().str();
+        auto uniqueName = name;
+        while (!state.arrayNames.insert(uniqueName).second) {
+          uniqueName = name + "_" + llvm::utostr(++id);
+        }
+        const Array *array = arrayCache.CreateArray(uniqueName, size);
+        bindObjectInState(state, mo, false, array);
+        state.addSymbolic(mo, array);
+      } else {
+        for (unsigned offset = 0; offset < size; offset++) {
+          os->write8(offset, 0, static_cast<unsigned char *>(addr)[offset]);
+        }
       }
     } else if (v.hasInitializer()) {
       void *address = memory->allocateMemory(
@@ -881,6 +899,8 @@ void Executor::initializeGlobalObjects(ExecutionState &state) {
       if (v.isConstant())
         constantObjects.emplace_back(os);
     } else {
+      // this should not happen in our fork...
+      klee_warning("Initializing global to random");
       os->initializeToRandom();
     }
   }
