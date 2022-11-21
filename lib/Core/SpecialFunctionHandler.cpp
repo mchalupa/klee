@@ -102,11 +102,11 @@ static SpecialFunctionHandler::HandlerInfo handlerInfo[] = {
   add("klee_get_value_i64", handleGetValue, true),
   add("klee_define_fixed_object", handleDefineFixedObject, false),
   add("klee_get_obj_size", handleGetObjSize, true),
-  add("klee_get_errno", handleGetErrno, true),
+//  add("klee_get_errno", handleGetErrno, true),
 #ifndef __APPLE__
-  add("__errno_location", handleErrnoLocation, true),
+//  add("__errno_location", handleErrnoLocation, true),
 #else
-  add("__error", handleErrnoLocation, true),
+ // add("__error", handleErrnoLocation, true),
 #endif
   add("klee_is_symbolic", handleIsSymbolic, true),
   add("klee_make_symbolic", handleMakeSymbolic, false),
@@ -716,52 +716,53 @@ void SpecialFunctionHandler::handleGetObjSize(ExecutionState &state,
   }
 }
 
-void SpecialFunctionHandler::handleGetErrno(ExecutionState &state,
-                                            KInstruction *target,
-                                            const std::vector<Cell> &arguments) {
-  // XXX should type check args
-  assert(arguments.size()==0 &&
-         "invalid number of arguments to klee_get_errno");
-#ifndef WINDOWS
-  int *errno_addr = executor.getErrnoLocation(state);
-#else
-  int *errno_addr = nullptr;
-#endif
+//void SpecialFunctionHandler::handleGetErrno(ExecutionState &state,
+//                                            KInstruction *target,
+//                                            const std::vector<Cell> &arguments) {
+//  // XXX should type check args
+//  assert(arguments.size()==0 &&
+//         "invalid number of arguments to klee_get_errno");
+//#ifndef WINDOWS
+//  int *errno_addr = executor.getErrnoLocation(state);
+//#else
+//  int *errno_addr = nullptr;
+//#endif
 
-  // Retrieve the memory object of the errno variable
-  ObjectPair result;
-  auto segmentExpr = ConstantExpr::create(ERRNO_SEGMENT, Expr::Int64);
-  auto addrExpr = ConstantExpr::create((uint64_t)errno_addr, Context::get().getPointerWidth());
-  bool resolved;
-  Optional<uint64_t> temp;
-  state.addressSpace.resolveOne(state, executor.solver,
-                                KValue(segmentExpr, addrExpr),
-                                result, resolved, temp);
-  if (!resolved)
-    executor.terminateStateOnUserError(state, "Could not resolve address for errno");
-  executor.bindLocal(target, state,
-                     KValue(ConstantExpr::create(errno, Expr::Int32)));
-}
+//  // Retrieve the memory object of the errno variable
+//  ObjectPair result;
+//  auto segmentExpr = ConstantExpr::create(ERRNO_SEGMENT, Expr::Int64);
+//  auto addrExpr = ConstantExpr::create((uint64_t)errno_addr, Context::get().getPointerWidth());
+//  bool resolved;
+//  Optional<uint64_t> temp;
+//  state.addressSpace.resolveOne(state, executor.solver,
+//                                KValue(segmentExpr, addrExpr),
+//                                result, resolved, temp);
+//  if (!resolved)
+//    executor.terminateStateOnUserError(state, "Could not resolve address for errno");
+//  executor.bindLocal(target, state,
+//                     KValue(ConstantExpr::create(errno, Expr::Int32)));
+//}
 
-void SpecialFunctionHandler::handleErrnoLocation(
-    ExecutionState &state, KInstruction *target,
-    const std::vector<Cell> &arguments) {
-  // Returns the address of the errno variable
-  assert(arguments.size() == 0 &&
-         "invalid number of arguments to __errno_location/__error");
+//void SpecialFunctionHandler::handleErrnoLocation(
+//    ExecutionState &state, KInstruction *target,
+//    const std::vector<Cell> &arguments) {
+//  // Returns the address of the errno variable
+//  assert(arguments.size() == 0 &&
+//         "invalid number of arguments to __errno_location/__error");
 
-#ifndef WINDOWS
-  int *errno_addr = executor.getErrnoLocation(state);
-#else
-  int *errno_addr = nullptr;
-#endif
+//#ifndef WINDOWS
+//  int *errno_addr = executor.getErrnoLocation(state);
+//#else
+//  int *errno_addr = nullptr;
+//#endif
 
-  executor.bindLocal(
-      target, state,
-      ConstantExpr::create((uint64_t)errno_addr,
-                           executor.kmodule->targetData->getTypeSizeInBits(
-                               target->inst->getType())));
-}
+//  executor.bindLocal(
+//      target, state,
+//      ConstantExpr::create((uint64_t)errno_addr,
+//                           executor.kmodule->targetData->getTypeSizeInBits(
+//                               target->inst->getType())));
+//}
+
 void SpecialFunctionHandler::handleCalloc(ExecutionState &state,
                             KInstruction *target,
                             const std::vector<Cell> &arguments) {

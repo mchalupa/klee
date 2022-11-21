@@ -11,6 +11,7 @@ set(LIB_PREFIX "RuntimeKLEELibc")
 set(SRC_FILES
         __cxa_atexit.c
 	__ctype_b_loc.c
+	__errno_location.c
         abort.c
         atexit.c
         atoi.c
@@ -37,6 +38,7 @@ set(SRC_FILES
         strerror.c
         tolower.c
         toupper.c
+	getenv.c
         )
 
 # Add __NO_INLINE__ to prevent glibc from using inline definitions of some

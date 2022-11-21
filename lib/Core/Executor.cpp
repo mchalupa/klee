@@ -720,13 +720,13 @@ void Executor::allocateGlobalObjects(ExecutionState &state) {
     }
   }
 
-#ifndef WINDOWS
-  int *errno_addr = getErrnoLocation(state);
-  MemoryObject *errnoObj = addExternalObject(
-      state, errno_addr, sizeof *errno_addr, false, ERRNO_SEGMENT);
-  // Copy values from and to program space explicitly
-  errnoObj->isUserSpecified = true;
-#endif
+//#ifndef WINDOWS
+//  int *errno_addr = getErrnoLocation(state);
+//  MemoryObject *errnoObj = addExternalObject(
+//      state, errno_addr, sizeof *errno_addr, false, ERRNO_SEGMENT);
+//  // Copy values from and to program space explicitly
+//  errnoObj->isUserSpecified = true;
+//#endif
 
   // Disabled, we don't want to promote use of live externals.
 #ifdef HAVE_CTYPE_EXTERNALS
@@ -4478,34 +4478,34 @@ void Executor::callExternalFunction(ExecutionState &state,
 
   // Prepare external memory for invoking the function
   state.addressSpace.copyOutConcretes(resolvedMOs, true);
-#ifndef WINDOWS
+ // #ifndef WINDOWS
   // Update external errno state with local state value
-  int *errno_addr = getErrnoLocation(state);
-  ObjectPair result;
-  auto segment = ConstantExpr::create(ERRNO_SEGMENT, Expr::Int64);
-  auto offset = ConstantExpr::create(0, Context::get().getPointerWidth());
-  Optional<uint64_t> temp;
-  bool resolved;
-  state.addressSpace.resolveOne(state, solver,
-                                KValue(segment, offset),
-                                result, resolved, temp);
-  if (temp)
-    offset =
-        ConstantExpr::create(temp.getValue(), Context::get().getPointerWidth());
-  if (!resolved)
-    klee_error("Could not resolve memory object for errno");
-  auto errValueExpr = result.second->read(0, sizeof(*errno_addr) * 8);
-  auto errnoValue = dyn_cast<ConstantExpr>(errValueExpr.getValue());
-  if (!errnoValue) {
-    terminateStateOnExecError(state,
-                              "external call with errno value symbolic: " +
-                                  callable->getName());
-    return;
-  }
+ //int *errno_addr = getErrnoLocation(state);
+ //ObjectPair result;
+ //auto segment = ConstantExpr::create(ERRNO_SEGMENT, Expr::Int64);
+ //auto offset = ConstantExpr::create(0, Context::get().getPointerWidth());
+ //Optional<uint64_t> temp;
+ //bool resolved;
+ //state.addressSpace.resolveOne(state, solver,
+ //                              KValue(segment, offset),
+ //                              result, resolved, temp);
+ //if (temp)
+ //  offset =
+ //      ConstantExpr::create(temp.getValue(), Context::get().getPointerWidth());
+ //if (!resolved)
+ //  klee_error("Could not resolve memory object for errno");
+ //auto errValueExpr = result.second->read(0, sizeof(*errno_addr) * 8);
+ //auto errnoValue = dyn_cast<ConstantExpr>(errValueExpr.getValue());
+ //if (!errnoValue) {
+ //  terminateStateOnExecError(state,
+ //                            "external call with errno value symbolic: " +
+ //                                callable->getName());
+ //  return;
+ //}
 
-  externalDispatcher->setLastErrno(
-      errnoValue->getZExtValue(sizeof(*errno_addr) * 8));
-#endif
+ // externalDispatcher->setLastErrno(
+ //     errnoValue->getZExtValue(sizeof(*errno_addr) * 8));
+ //#endif
 
   if (!SuppressExternalWarnings) {
 
@@ -4542,12 +4542,12 @@ void Executor::callExternalFunction(ExecutionState &state,
     return;
   }
 
-#ifndef WINDOWS
-  // Update errno memory object with the errno value from the call
-  int error = externalDispatcher->getLastErrno();
-  state.addressSpace.copyInConcrete(result.first, result.second,
-                                    (uint64_t)&error, state, solver);
-#endif
+//#ifndef WINDOWS
+//  // Update errno memory object with the errno value from the call
+//  int error = externalDispatcher->getLastErrno();
+//  state.addressSpace.copyInConcrete(result.first, result.second,
+//                                    (uint64_t)&error, state, solver);
+//#endif
 
   Type *resultType = target->inst->getType();
   if (!resultType->isVoidTy()) {
@@ -5466,14 +5466,14 @@ void Executor::prepareForEarlyExit() {
 }
 
 /// Returns the errno location in memory
-int *Executor::getErrnoLocation(const ExecutionState &state) const {
-#if !defined(__APPLE__) && !defined(__FreeBSD__)
-  /* From /usr/include/errno.h: it [errno] is a per-thread variable. */
-  return __errno_location();
-#else
-  return __error();
-#endif
-}
+//int *Executor::getErrnoLocation(const ExecutionState &state) const {
+//#if !defined(__APPLE__) && !defined(__FreeBSD__)
+//  [> From /usr/include/errno.h: it [errno] is a per-thread variable. <]
+//  return __errno_location();
+//#else
+//  return __error();
+//#endif
+//}
 
 
 void Executor::dumpPTree() {
