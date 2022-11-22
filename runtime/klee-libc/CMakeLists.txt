@@ -12,6 +12,7 @@ set(SRC_FILES
         __cxa_atexit.c
 	__ctype_b_loc.c
 	__errno_location.c
+	abs.c
         abort.c
         atexit.c
         atoi.c
