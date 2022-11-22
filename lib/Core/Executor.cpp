@@ -4290,7 +4290,8 @@ static std::set<std::string> nokExternals({"fesetround", "fesetenv",
                                            "feenableexcept", "fedisableexcept",
                                            "feupdateenv", "fesetexceptflag",
                                            "feclearexcept", "feraiseexcept",
-                                           "gettext", "longjmp"});
+                                           "gettext", "longjmp",
+                                           "strspn", "strtod"});
 
 void Executor::callExternalFunction(ExecutionState &state,
                                     KInstruction *target,
