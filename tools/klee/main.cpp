@@ -1283,6 +1283,12 @@ void externalsAndGlobalsCheck(const llvm::Module *m) {
         if (unsafe.count(ext)) {
           foundUnsafe.insert(*it);
         } else {
+          if (!it->second) {
+              // Do not warn about undefined functions, we'll find that out
+              // when we'll try to run them.
+              // FIXME: do this only when ExternalCallPolicy == pure
+              continue;
+          }
           klee_warning("undefined reference to %s: %s",
                        it->second ? "variable" : "function",
                        ext.c_str());
