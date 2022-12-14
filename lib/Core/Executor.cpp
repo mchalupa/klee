@@ -4323,14 +4323,23 @@ void Executor::callExternalFunction(ExecutionState &state,
 
   if (ExternalCalls == ExternalCallPolicy::Pure &&
       !okExternals.count(callable->getName().str())) {
+    if (!func) { // this can be an ASM
+      klee_warning_once(target, "Skipping call of undefined function: %s",
+                        callable->getName().str().c_str());
+      return;
+    }
+
+    assert(func);
     auto *retTy = func->function->getReturnType();
-    if (!func || retTy->isVoidTy()) {
-        //klee_warning_once(target, "Skipping call of undefined function: %s",
-        //                  function->getName().str().c_str());
+    if (retTy->isVoidTy()) {
+        // we assume that the function is pure, so it is safe to skip it
+        // since it does not return a value
         return;
     }
 
     // the function returns something
+    assert(func);
+    assert(!retTy->isVoidTy());
 
     DataLayout& DL = *kmodule->targetData;
     auto size = DL.getTypeAllocSizeInBits(retTy);
