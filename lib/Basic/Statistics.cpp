@@ -10,6 +10,7 @@
 #include "klee/Statistics/Statistics.h"
 
 #include <vector>
+#include <cstdint>
 
 using namespace klee;
 
