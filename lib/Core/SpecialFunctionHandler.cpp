@@ -84,10 +84,10 @@ static SpecialFunctionHandler::HandlerInfo handlerInfo[] = {
     addDNR("__assert", handleAssertFail),
     addDNR("_assert", handleAssert),
     addDNR("abort", handleAbort),
-    addDNR("_Exit", handleExit),
-    addDNR("_exit", handleExit),
+    addDNR("_Exit", handle_Exit),
+    addDNR("_exit", handle_Exit),
+    addDNR("klee.dtor_exit", handle_Exit),
     {"exit", &SpecialFunctionHandler::handleExit, true, false, true},
-    addDNR("klee.dtor_exit", handleDtorExit),
     addDNR("klee_abort", handleAbort),
     addDNR("klee_silent_exit", handleSilentExit),
     addDNR("klee_report_error", handleReportError),
@@ -361,7 +361,7 @@ void SpecialFunctionHandler::handleExit(ExecutionState &state,
       executor.terminateStateOnExit(state);
 }
 
-void SpecialFunctionHandler::handleDtorExit(
+void SpecialFunctionHandler::handle_Exit(
     ExecutionState &state, KInstruction *target,
     const std::vector<Cell> &arguments) {
   assert(arguments.size() == 1 && "invalid number of arguments to exit");
