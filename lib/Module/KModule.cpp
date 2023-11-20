@@ -25,21 +25,22 @@
 #include "llvm/Bitcode/BitcodeWriter.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/InstIterator.h"
 #include "llvm/IR/Instructions.h"
-#include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/ValueSymbolTable.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/Linker/Linker.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Path.h"
-#include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/raw_os_ostream.h"
+#include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Scalar/Scalarizer.h"
-#include "llvm/Transforms/Utils/Cloning.h"
 #include "llvm/Transforms/Utils.h"
+#include "llvm/Transforms/Utils/Cloning.h"
 
 #include <sstream>
 
@@ -114,12 +115,20 @@ static Function *getStubFunctionForCtorList(Module *m,
          "do not support old LLVM style constructor/destructor lists");
 
   std::vector<Type *> nullary;
+  std::vector<Type *> unary = {Type::getInt32Ty(m->getContext())};
 
-  Function *fn = Function::Create(FunctionType::get(Type::getVoidTy(m->getContext()),
-						    nullary, false),
-				  GlobalVariable::InternalLinkage, 
-				  name,
-                              m);
+  bool passExitValue = (name == "klee.dtor_stub1");
+  FunctionType *fntype;
+
+  if (passExitValue)
+    fntype = FunctionType::get(Type::getVoidTy(m->getContext()), unary,
+                               /* isVarArg=*/false);
+  else
+    fntype = FunctionType::get(Type::getVoidTy(m->getContext()), nullary,
+                               /* isVarArg=*/false);
+
+  Function *fn =
+      Function::Create(fntype, GlobalVariable::InternalLinkage, name, m);
   BasicBlock *bb = BasicBlock::Create(m->getContext(), "entry", fn);
   llvm::IRBuilder<> Builder(bb);
 
@@ -147,7 +156,14 @@ static Function *getStubFunctionForCtorList(Module *m,
     }
   }
 
-  Builder.CreateRetVoid();
+  if (passExitValue) {
+    // call a special exit functino if we are propagating the exit value
+    auto exitfn = m->getOrInsertFunction("klee.dtor_exit", fntype);
+    Builder.CreateCall(exitfn, {fn->getArg(0)});
+    Builder.CreateRetVoid();
+  } else {
+    Builder.CreateRetVoid();
+  }
 
   return fn;
 }
@@ -173,13 +189,16 @@ injectStaticConstructorsAndDestructors(Module *m,
 
   if (dtors) {
     Function *dtorStub = getStubFunctionForCtorList(m, dtors, "klee.dtor_stub");
-    for (Function::iterator it = mainFn->begin(), ie = mainFn->end(); it != ie;
-         ++it) {
+    // Inject the call of `klee.dtor_stub` before any return from main
+    for (auto it = mainFn->begin(), ie = mainFn->end(); it != ie; ++it) {
       if (isa<ReturnInst>(it->getTerminator())) {
         llvm::IRBuilder<> Builder(it->getTerminator());
         Builder.CreateCall(dtorStub);
       }
     }
+    // create also the version that passes value and that is called from
+    // special function handlers upon calls to `exit`
+    getStubFunctionForCtorList(m, dtors, "klee.dtor_stub1");
   }
 }
 
@@ -257,10 +276,6 @@ void KModule::optimiseAndPrepare(
   if (opts.CheckOvershift)
     addInternalFunction("klee_overshift_check");
 
-  // Needs to happen after linking (since ctors/dtors can be modified)
-  // and optimization (since global optimization can rewrite lists).
-  injectStaticConstructorsAndDestructors(module.get(), opts.EntryPoint);
-
   // Finally, run the passes that maintain invariants we expect during
   // interpretation. We run the intrinsic cleaner just in case we
   // linked in something with intrinsics but any external calls are
@@ -279,6 +294,12 @@ void KModule::optimiseAndPrepare(
   pm3.add(new PhiCleanerPass());
   pm3.add(new FunctionAliasPass());
   pm3.run(*module);
+
+  // Needs to happen after linking (since ctors/dtors can be modified)
+  // and optimization (since global optimization can rewrite lists).
+  // Also, it needs to be called after optimizations so that the injected
+  // functions that are not explicitely called are preserved
+  injectStaticConstructorsAndDestructors(module.get(), opts.EntryPoint);
 }
 
 void KModule::manifest(InterpreterHandler *ih, bool forceSourceOutput) {

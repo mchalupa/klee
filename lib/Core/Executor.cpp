@@ -2189,6 +2189,39 @@ void Executor::executeCall(ExecutionState &state, KInstruction *ki, Function *f,
   }
 }
 
+void Executor::executeAtExitStub(ExecutionState &state,
+                                 const std::vector<Cell> &arguments) {
+
+  // FIXME: I'm not really happy about this reliance on prevPC but it is ok, I
+  // guess. This just done to avoid having to pass KInstIterator everywhere
+  // instead of the actual instruction, since we can't make a KInstIterator
+  // from just an instruction (unlike LLVM).
+  Function *f = kmodule->module->getFunction("klee.dtor_stub1");
+  assert(f && "dtor stub was not created");
+  KFunction *kf = kmodule->functionMap[f];
+
+  state.pushFrame(state.prevPC, kf);
+  state.pc = kf->instructions;
+
+  if (statsTracker)
+    statsTracker->framePushed(state, &state.stack[state.stack.size() - 2]);
+
+  unsigned callingArgs = arguments.size();
+  unsigned funcArgs = f->arg_size();
+  if (callingArgs > funcArgs) {
+    terminateStateOnUserError(state,
+                              "calling function with too many arguments");
+    return;
+  } else if (callingArgs < funcArgs) {
+    terminateStateOnUserError(state, "calling function with too few arguments");
+    return;
+  }
+
+  unsigned numFormals = f->arg_size();
+  for (unsigned k = 0; k < numFormals; k++)
+    bindArgument(kf, k, state, arguments[k]);
+}
+
 void Executor::transferToBasicBlock(BasicBlock *dst, BasicBlock *src, 
                                     ExecutionState &state) {
   // Note that in general phi nodes can reuse phi values from the same

@@ -334,6 +334,9 @@ private:
                    llvm::Function *f,
                    const std::vector<Cell> &arguments);
 
+  void executeAtExitStub(ExecutionState &state,
+                         const std::vector<Cell> &arguments);
+
   void executeMemoryRead(ExecutionState &state,
                          const KValue &address,
                          KInstruction *target);

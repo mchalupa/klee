@@ -130,6 +130,7 @@ namespace klee {
 #endif
     HANDLER(handleErrnoLocation);
     HANDLER(handleExit);
+    HANDLER(handleDtorExit);
     HANDLER(handleFree);
     HANDLER(handleGetErrno);
     HANDLER(handleGetObjSize);

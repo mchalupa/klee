@@ -79,113 +79,115 @@ static SpecialFunctionHandler::HandlerInfo handlerInfo[] = {
 #define addDNR(name, handler) { name, \
                                 &SpecialFunctionHandler::handler, \
                                 true, false, false }
-  addDNR("__assert_rtn", handleAssertFail),
-  addDNR("__assert_fail", handleAssertFail),
-  addDNR("__assert", handleAssertFail),
-  addDNR("_assert", handleAssert),
-  addDNR("abort", handleAbort),
-  addDNR("_Exit", handleExit),
-  addDNR("_exit", handleExit),
-  { "exit", &SpecialFunctionHandler::handleExit, true, false, true },
-  addDNR("klee_abort", handleAbort),
-  addDNR("klee_silent_exit", handleSilentExit),
-  addDNR("klee_report_error", handleReportError),
-  add("calloc", handleCalloc, true),
-  add("free", handleFree, false),
-  add("klee_assume", handleAssume, false),
-  add("klee_check_memory_access", handleCheckMemoryAccess, false),
-  add("klee_get_valuef", handleGetValue, true),
-  add("klee_get_valued", handleGetValue, true),
-  add("klee_get_valuel", handleGetValue, true),
-  add("klee_get_valuell", handleGetValue, true),
-  add("klee_get_value_i32", handleGetValue, true),
-  add("klee_get_value_i64", handleGetValue, true),
-  add("klee_define_fixed_object", handleDefineFixedObject, false),
-  add("klee_get_obj_size", handleGetObjSize, true),
+    addDNR("__assert_rtn", handleAssertFail),
+    addDNR("__assert_fail", handleAssertFail),
+    addDNR("__assert", handleAssertFail),
+    addDNR("_assert", handleAssert),
+    addDNR("abort", handleAbort),
+    addDNR("_Exit", handleExit),
+    addDNR("_exit", handleExit),
+    {"exit", &SpecialFunctionHandler::handleExit, true, false, true},
+    addDNR("klee.dtor_exit", handleDtorExit),
+    addDNR("klee_abort", handleAbort),
+    addDNR("klee_silent_exit", handleSilentExit),
+    addDNR("klee_report_error", handleReportError),
+    add("calloc", handleCalloc, true),
+    add("free", handleFree, false),
+    add("klee_assume", handleAssume, false),
+    add("klee_check_memory_access", handleCheckMemoryAccess, false),
+    add("klee_get_valuef", handleGetValue, true),
+    add("klee_get_valued", handleGetValue, true),
+    add("klee_get_valuel", handleGetValue, true),
+    add("klee_get_valuell", handleGetValue, true),
+    add("klee_get_value_i32", handleGetValue, true),
+    add("klee_get_value_i64", handleGetValue, true),
+    add("klee_define_fixed_object", handleDefineFixedObject, false),
+    add("klee_get_obj_size", handleGetObjSize, true),
 //  add("klee_get_errno", handleGetErrno, true),
 #ifndef __APPLE__
 //  add("__errno_location", handleErrnoLocation, true),
 #else
  // add("__error", handleErrnoLocation, true),
 #endif
-  add("klee_is_symbolic", handleIsSymbolic, true),
-  add("klee_make_symbolic", handleMakeSymbolic, false),
-  add("klee_mark_global", handleMarkGlobal, false),
-  add("klee_open_merge", handleOpenMerge, false),
-  add("klee_close_merge", handleCloseMerge, false),
-  add("klee_prefer_cex", handlePreferCex, false),
-  add("klee_posix_prefer_cex", handlePosixPreferCex, false),
-  add("klee_print_expr", handlePrintExpr, false),
-  add("klee_print_range", handlePrintRange, false),
-  add("klee_set_forking", handleSetForking, false),
-  add("klee_stack_trace", handleStackTrace, false),
-  add("klee_warning", handleWarning, false),
-  add("klee_warning_once", handleWarningOnce, false),
-  add("malloc", handleMalloc, true),
-  add("memalign", handleMemalign, true),
-  add("realloc", handleRealloc, true),
-  add("__VERIFIER_scope_enter", handleScopeEnter, false),
-  add("__VERIFIER_scope_leave", handleScopeLeave, false),
-  // SV-COMP special functions. We could define them using
-  // klee_make_symbolic, but if we handle them here,
-  // it is much easier to generate counter-examples later.
-  add("__VERIFIER_nondet_bool", handleVerifierNondetBool, true),
-  add("__VERIFIER_nondet__Bool", handleVerifierNondet_Bool, true),
-  add("__VERIFIER_nondet_char", handleVerifierNondetChar, true),
-  add("__VERIFIER_nondet_int", handleVerifierNondetInt, true),
-  add("__VERIFIER_nondet_float", handleVerifierNondetFloat, true),
-  add("__VERIFIER_nondet_double", handleVerifierNondetDouble, true),
-  add("__VERIFIER_nondet_loff_t", handleVerifierNondetLOffT, true),
-  add("__VERIFIER_nondet_long", handleVerifierNondetLong, true),
-  add("__VERIFIER_nondet_pchar", handleVerifierNondetPChar, true),
-  add("__VERIFIER_nondet_pointer", handleVerifierNondetPointer, true),
-  add("__VERIFIER_nondet_pthread_t", handleVerifierNondetPthreadT, true),
-  add("__VERIFIER_nondet_sector_t", handleVerifierNondetSectorT, true),
-  add("__VERIFIER_nondet_short", handleVerifierNondetShort, true),
-  add("__VERIFIER_nondet_size_t", handleVerifierNondetSizeT, true),
-  add("__VERIFIER_nondet_u32", handleVerifierNondetU32, true),
-  add("__VERIFIER_nondet_uchar", handleVerifierNondetUChar, true),
-  add("__VERIFIER_nondet_uint", handleVerifierNondetUInt, true),
-  add("__VERIFIER_nondet_ulong", handleVerifierNondetULong, true),
-  add("__VERIFIER_nondet_unsigned", handleVerifierNondetUnsigned, true),
-  add("__VERIFIER_nondet_ushort", handleVerifierNondetUShort, true),
+    add("klee_is_symbolic", handleIsSymbolic, true),
+    add("klee_make_symbolic", handleMakeSymbolic, false),
+    add("klee_mark_global", handleMarkGlobal, false),
+    add("klee_open_merge", handleOpenMerge, false),
+    add("klee_close_merge", handleCloseMerge, false),
+    add("klee_prefer_cex", handlePreferCex, false),
+    add("klee_posix_prefer_cex", handlePosixPreferCex, false),
+    add("klee_print_expr", handlePrintExpr, false),
+    add("klee_print_range", handlePrintRange, false),
+    add("klee_set_forking", handleSetForking, false),
+    add("klee_stack_trace", handleStackTrace, false),
+    add("klee_warning", handleWarning, false),
+    add("klee_warning_once", handleWarningOnce, false),
+    add("malloc", handleMalloc, true),
+    add("memalign", handleMemalign, true),
+    add("realloc", handleRealloc, true),
+    add("__VERIFIER_scope_enter", handleScopeEnter, false),
+    add("__VERIFIER_scope_leave", handleScopeLeave, false),
+    // SV-COMP special functions. We could define them using
+    // klee_make_symbolic, but if we handle them here,
+    // it is much easier to generate counter-examples later.
+    add("__VERIFIER_nondet_bool", handleVerifierNondetBool, true),
+    add("__VERIFIER_nondet__Bool", handleVerifierNondet_Bool, true),
+    add("__VERIFIER_nondet_char", handleVerifierNondetChar, true),
+    add("__VERIFIER_nondet_int", handleVerifierNondetInt, true),
+    add("__VERIFIER_nondet_float", handleVerifierNondetFloat, true),
+    add("__VERIFIER_nondet_double", handleVerifierNondetDouble, true),
+    add("__VERIFIER_nondet_loff_t", handleVerifierNondetLOffT, true),
+    add("__VERIFIER_nondet_long", handleVerifierNondetLong, true),
+    add("__VERIFIER_nondet_pchar", handleVerifierNondetPChar, true),
+    add("__VERIFIER_nondet_pointer", handleVerifierNondetPointer, true),
+    add("__VERIFIER_nondet_pthread_t", handleVerifierNondetPthreadT, true),
+    add("__VERIFIER_nondet_sector_t", handleVerifierNondetSectorT, true),
+    add("__VERIFIER_nondet_short", handleVerifierNondetShort, true),
+    add("__VERIFIER_nondet_size_t", handleVerifierNondetSizeT, true),
+    add("__VERIFIER_nondet_u32", handleVerifierNondetU32, true),
+    add("__VERIFIER_nondet_uchar", handleVerifierNondetUChar, true),
+    add("__VERIFIER_nondet_uint", handleVerifierNondetUInt, true),
+    add("__VERIFIER_nondet_ulong", handleVerifierNondetULong, true),
+    add("__VERIFIER_nondet_unsigned", handleVerifierNondetUnsigned, true),
+    add("__VERIFIER_nondet_ushort", handleVerifierNondetUShort, true),
 
-  add("__VERIFIER_assume", handleAssume, false),
+    add("__VERIFIER_assume", handleAssume, false),
 
 #ifdef SUPPORT_KLEE_EH_CXX
-  add("_klee_eh_Unwind_RaiseException_impl", handleEhUnwindRaiseExceptionImpl, false),
-  add("klee_eh_typeid_for", handleEhTypeid, true),
+    add("_klee_eh_Unwind_RaiseException_impl", handleEhUnwindRaiseExceptionImpl,
+        false),
+    add("klee_eh_typeid_for", handleEhTypeid, true),
 #endif
 
-  // operator delete[](void*)
-  add("_ZdaPv", handleDeleteArray, false),
-  // operator delete(void*)
-  add("_ZdlPv", handleDelete, false),
+    // operator delete[](void*)
+    add("_ZdaPv", handleDeleteArray, false),
+    // operator delete(void*)
+    add("_ZdlPv", handleDelete, false),
 
-  // operator new[](unsigned int)
-  add("_Znaj", handleNewArray, true),
-  // operator new(unsigned int)
-  add("_Znwj", handleNew, true),
+    // operator new[](unsigned int)
+    add("_Znaj", handleNewArray, true),
+    // operator new(unsigned int)
+    add("_Znwj", handleNew, true),
 
-  // FIXME-64: This is wrong for 64-bit long...
+    // FIXME-64: This is wrong for 64-bit long...
 
-  // operator new[](unsigned long)
-  add("_Znam", handleNewArray, true),
-  // operator new(unsigned long)
-  add("_Znwm", handleNew, true),
+    // operator new[](unsigned long)
+    add("_Znam", handleNewArray, true),
+    // operator new(unsigned long)
+    add("_Znwm", handleNew, true),
 
-  add("pthread_create", handlePthreadCreate, true),
-  add("pthread_join", handlePthreadJoin, true),
-  add("pthread_key_create", handleUnsupportedPthread, true),
-  add("pthread_setspecific", handleUnsupportedPthread, true),
-  add("pthread_getspecific", handleUnsupportedPthread, true),
-  add("scanf", handleScanf, true),
-  add("__isoc99_scanf", handleScanf, true),
-  add("__isoc99_wscanf", handleScanf, true),
-  add("fscanf", handleFscanf, true),
-  add("__isoc99_fscanf", handleFscanf, true),
-  add("__isoc99_sscanf", handleFscanf, true),
-  add("__isoc99_swscanf", handleFscanf, true),
+    add("pthread_create", handlePthreadCreate, true),
+    add("pthread_join", handlePthreadJoin, true),
+    add("pthread_key_create", handleUnsupportedPthread, true),
+    add("pthread_setspecific", handleUnsupportedPthread, true),
+    add("pthread_getspecific", handleUnsupportedPthread, true),
+    add("scanf", handleScanf, true),
+    add("__isoc99_scanf", handleScanf, true),
+    add("__isoc99_wscanf", handleScanf, true),
+    add("fscanf", handleFscanf, true),
+    add("__isoc99_fscanf", handleFscanf, true),
+    add("__isoc99_sscanf", handleFscanf, true),
+    add("__isoc99_swscanf", handleFscanf, true),
 
 #undef addDNR
 #undef add
@@ -352,6 +354,16 @@ void SpecialFunctionHandler::handleAbort(ExecutionState &state,
 void SpecialFunctionHandler::handleExit(ExecutionState &state,
                                         KInstruction *target,
                                         const std::vector<Cell> &arguments) {
+  assert(arguments.size() == 1 && "invalid number of arguments to exit");
+  if (executor.kmodule->module->getFunction("klee.dtor_stub1"))
+      executor.executeAtExitStub(state, arguments);
+  else
+      executor.terminateStateOnExit(state);
+}
+
+void SpecialFunctionHandler::handleDtorExit(
+    ExecutionState &state, KInstruction *target,
+    const std::vector<Cell> &arguments) {
   assert(arguments.size() == 1 && "invalid number of arguments to exit");
   executor.terminateStateOnExit(state);
 }
