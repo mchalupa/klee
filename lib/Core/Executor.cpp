@@ -4352,7 +4352,7 @@ static std::set<std::string> nokExternals({"fesetround", "fesetenv",
                                            "feenableexcept", "fedisableexcept",
                                            "feupdateenv", "fesetexceptflag",
                                            "feclearexcept", "feraiseexcept",
-                                           "gettext", "dcgettext" , "longjmp", "fgets", "getmntent",
+                                           "gettext", "dcgettext" , "setjmp", "_setjmp", "longjmp", "fgets", "getmntent",
                                            "__freading", "__fwriting", "fread", "fread_unlocked",
                                            "strspn", "strtod"});
 
