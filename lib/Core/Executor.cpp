@@ -3889,11 +3889,12 @@ static std::vector<const MemoryObject *> getMemoryLeaks(ExecutionState &state) {
     return leaks;
 }
 
-static void getPointers(const llvm::Type *type,
-                        const llvm::DataLayout& DL,
-                        const ObjectState *os,
-                        std::set<ref<Expr>>& objects,
-                        unsigned off=0) {
+static bool getPointers(const llvm::Type *type,
+                         const llvm::DataLayout& DL,
+                         const ObjectState *os,
+                         std::set<ref<Expr>>& objects,
+                         unsigned off=0) {
+  bool err = false;
   using namespace llvm;
 
   const auto ptrWidth = Context::get().getPointerWidth();
@@ -3903,7 +3904,7 @@ static void getPointers(const llvm::Type *type,
   // any object that has segment plane set
   for (auto *Ty : type->subtypes()) {
       if (Ty->isStructTy()) {
-          getPointers(Ty, DL, os, objects, off);
+          err |= getPointers(Ty, DL, os, objects, off);
       } else if (auto AT = dyn_cast<ArrayType>(Ty)) {
           if (AT->getElementType()->isIntegerTy())
               continue; // we cannot find anything here
@@ -3911,8 +3912,8 @@ static void getPointers(const llvm::Type *type,
           // we must search on all indices in the array,
           // so just artificially shift offsets
           for (unsigned idx = 0; idx < AT->getNumElements(); ++idx) {
-              getPointers(Ty, DL, os, objects,
-                          off + idx*DL.getTypeAllocSize(AT->getElementType()));
+              err |= getPointers(Ty, DL, os, objects,
+                                 off + idx*DL.getTypeAllocSize(AT->getElementType()));
           }
       } if (Ty->isPointerTy()) {
         KValue ptr = os->read(off, ptrWidth);
@@ -3923,8 +3924,14 @@ static void getPointers(const llvm::Type *type,
       }
       // FIXME: is this always enough? Does this cover padding
       // in any structure?
+      if (!Ty->isSized()) {
+          err = true;
+          break;
+      }
+
       off += DL.getTypeAllocSize(Ty);
   }
+   return !err;
 }
 
 bool
@@ -3966,8 +3973,12 @@ Executor::getReachableMemoryObjects(ExecutionState &state,
       }
 
       std::set<ref<Expr>> segments;
-      getPointers(object.first->allocSite->getType(), DL,
-                  &*object.second, segments);
+      if (!getPointers(object.first->allocSite->getType(), DL,
+                  &*object.second, segments)) {
+          klee_warning("Failed searching pointers in types");
+          retval = false;
+      }
+
 
       for (auto segment : segments) {
         segment = toUnique(state, segment);

@@ -566,6 +566,9 @@ static std::string getDecl(const std::string& fun, unsigned bitwidth,
         auto *argTy = arg.getType();
         if (argTy->isPointerTy()) {
             args += "void *a" + std::to_string(n);
+        } else if (!arg.getType()->isSized()){
+            // external thing
+            args += "/*opaque*/ void *a" + std::to_string(n);
         } else {
             args += getCType(DL.getTypeSizeInBits(arg.getType()), false);
             args += "a" + std::to_string(n);
