@@ -542,7 +542,10 @@ static std::string getCType(unsigned bitwidth, bool isSigned) {
 static std::string getDecl(const std::string& fun, unsigned bitwidth,
                            bool isSigned, llvm::Module *module) {
   auto F = module->getFunction(fun);
-  assert(F && "Wrong function");
+  if (!F) {
+      klee_warning("Could not find function '%s' while creating the harness\n", fun.c_str());
+      return "int " + fun + "()";
+  }
   /*
   if (auto subprog = F->getSubprogram()) {
       // this is just quick hack, we should reconstruct the type properly
@@ -796,6 +799,12 @@ void KleeHandler::processTestCase(const ExecutionState &state,
         }
 
         for (auto& func : functions) {
+            if (func.first.rfind("__asm__", 0) == 0) {
+                klee_warning("Skipping models of inline assembly when generating harness.");
+                // inline assembly
+                continue;
+            }
+
             auto& val = *func.second.begin();
             *harness << getDecl(func.first, val.getBitWidth(),
                                 val.isSigned(), getModule()) << " {\n";

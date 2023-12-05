@@ -1374,7 +1374,7 @@ void SpecialFunctionHandler::handleScanf(ExecutionState &state,
   executor.bindLocal(target, state,
                    executor.createNondetValue(state, Expr::Int32,
                                               true, target,
-                                              "fscanf_ret", false));
+                                              "scanf", false));
 }
 
 
@@ -1404,5 +1404,5 @@ void SpecialFunctionHandler::handleFscanf(ExecutionState &state,
   executor.bindLocal(target, state,
                    executor.createNondetValue(state, Expr::Int32,
                                               true, target,
-                                              "fscanf_ret", false));
+                                              "fscanf", false));
 }
