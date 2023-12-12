@@ -108,7 +108,9 @@ static void AddStandardCompilePasses(legacy::PassManager &PM) {
   addPass(PM, createInstructionCombiningPass()); // Clean up after IPCP & DAE
   addPass(PM, createCFGSimplificationPass());    // Clean up after IPCP & DAE
 
+#if LLVM_VERSION_MAJOR < 16
   addPass(PM, createPruneEHPass());              // Remove dead EH info
+#endif
   addPass(PM, createPostOrderFunctionAttrsLegacyPass());
   addPass(PM, createReversePostOrderFunctionAttrsPass()); // Deduce function attrs
 
@@ -209,7 +211,9 @@ void Optimize(Module *M, llvm::ArrayRef<const char *> preservedFunctions) {
   if (!DisableInline)
     addPass(Passes, createFunctionInliningPass()); // Inline small functions
 
+#if LLVM_VERSION_MAJOR < 16
   addPass(Passes, createPruneEHPass());         // Remove dead EH info
+#endif
   addPass(Passes, createGlobalOptimizerPass()); // Optimize globals again.
   addPass(Passes, createGlobalDCEPass());       // Remove dead functions
 

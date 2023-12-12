@@ -133,8 +133,13 @@ bool RaiseAsmPass::runOnModule(Module &M) {
     klee_warning("Warning: unable to select target: %s", Err.c_str());
     TLI = 0;
   } else {
+#if LLVM_VERSION_MAJOR < 16
     TM = Target->createTargetMachine(TargetTriple, "", "", TargetOptions(),
                                      None);
+#else
+    TM = Target->createTargetMachine(TargetTriple, "", "", TargetOptions(),
+                                     std::nullopt);
+#endif
     TLI = TM->getSubtargetImpl(*(M.begin()))->getTargetLowering();
 
     triple = llvm::Triple(TargetTriple);

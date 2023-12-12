@@ -355,7 +355,11 @@ bool IntrinsicCleanerPass::runOnBasicBlock(BasicBlock &b, Module &M) {
       case Intrinsic::experimental_noalias_scope_decl:
 #endif
       case Intrinsic::floor:
+#if LLVM_VERSION_MAJOR < 16
       case Intrinsic::flt_rounds:
+#else
+      case Intrinsic::vp_round:
+#endif
       case Intrinsic::frameaddress:
       case Intrinsic::get_dynamic_area_offset:
       case Intrinsic::invariant_end:
