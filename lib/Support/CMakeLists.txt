@@ -25,3 +25,4 @@ set(LLVM_COMPONENTS
 )
 klee_get_llvm_libs(LLVM_LIBS ${LLVM_COMPONENTS})
 target_link_libraries(kleeSupport PUBLIC ${LLVM_LIBS})
+target_compile_features(kleeSupport PUBLIC cxx_std_17)

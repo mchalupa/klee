@@ -32,6 +32,9 @@ set(CMAKE_USER_MAKE_RULES_OVERRIDE_CXX
   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cxx_flags_override.cmake")
 project(KLEE CXX C)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 include(CheckFunctionExists)
 include(CheckLibraryExists)
 

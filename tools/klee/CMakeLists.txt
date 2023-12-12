@@ -15,6 +15,7 @@ set(KLEE_LIBS
 )
 
 target_link_libraries(klee ${KLEE_LIBS})
+target_compile_features(klee PUBLIC cxx_std_17)
 
 install(TARGETS klee RUNTIME DESTINATION bin)
 

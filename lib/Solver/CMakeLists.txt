@@ -37,6 +37,7 @@ set(LLVM_COMPONENTS
 )
 klee_get_llvm_libs(LLVM_LIBS ${LLVM_COMPONENTS})
 target_link_libraries(kleaverSolver PUBLIC ${LLVM_LIBS})
+target_compile_features(kleaverSolver PRIVATE cxx_std_17)
 
 target_link_libraries(kleaverSolver PRIVATE
   kleeBasic

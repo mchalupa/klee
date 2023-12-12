@@ -15,5 +15,7 @@ set(KLEE_LIBS
 )
 
 target_link_libraries(kleaver ${KLEE_LIBS})
+target_compile_features(kleaver PUBLIC cxx_std_17)
+
 
 install(TARGETS kleaver RUNTIME DESTINATION bin)
