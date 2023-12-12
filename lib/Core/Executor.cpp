@@ -5493,7 +5493,11 @@ size_t Executor::getAllocationAlignment(const llvm::Value *allocSite) const {
       type = GO->getType();
     }
   } else if (const AllocaInst *AI = dyn_cast<AllocaInst>(allocSite)) {
+#if LLVM_VERSION_MAJOR >= 15
+    alignment = AI->getAlign().value();
+#else
     alignment = AI->getAlignment();
+#endif
     type = AI->getAllocatedType();
   } else if (isa<InvokeInst>(allocSite) || isa<CallInst>(allocSite)) {
     // FIXME: Model the semantics of the call to use the right alignment

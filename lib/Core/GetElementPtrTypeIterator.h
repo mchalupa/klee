@@ -138,6 +138,9 @@ class generic_gep_type_iterator
     return iv_type_iterator::end(IV->idx_end());
   }
 
+// in LLVM >= 15, ConstantExpr have no indices, so these overloads
+// are useless (and only break the build)
+#if LLVM_VERSION_MAJOR < 15
   inline vce_type_iterator vce_type_begin(const llvm::ConstantExpr *CE) {
     return vce_type_iterator::begin(CE->getOperand(0)->getType(),
                                     CE->getIndices().begin());
@@ -145,6 +148,7 @@ class generic_gep_type_iterator
   inline vce_type_iterator vce_type_end(const llvm::ConstantExpr *CE) {
     return vce_type_iterator::end(CE->getIndices().end());
   }
+#endif
 
   template <typename ItTy>
   inline generic_gep_type_iterator<ItTy> gep_type_begin(llvm::Type *Op0, ItTy I,

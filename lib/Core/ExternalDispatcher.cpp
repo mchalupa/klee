@@ -276,16 +276,15 @@ Function *ExternalDispatcherImpl::createDispatcher(KCallable *target,
 
   llvm::IRBuilder<> Builder(dBB);
   // Get a Value* for &gTheArgsP, as an i64**.
+  auto ptrTy = PointerType::getUnqual(PointerType::getUnqual(Type::getInt64Ty(ctx)));
   auto argI64sp = Builder.CreateIntToPtr(
       ConstantInt::get(Type::getInt64Ty(ctx), (uintptr_t)(void *)&gTheArgsP),
-      PointerType::getUnqual(PointerType::getUnqual(Type::getInt64Ty(ctx))),
+      ptrTy,
       "argsp");
-  auto argI64s = Builder.CreateLoad(
-      argI64sp->getType()->getPointerElementType(), argI64sp, "args");
+  auto argI64s = Builder.CreateLoad(ptrTy, argI64sp, "args");
 
   // Get the target function type.
-  FunctionType *FTy = cast<FunctionType>(
-    cast<PointerType>(target->getType())->getElementType());
+  FunctionType *FTy = cb.getFunctionType();
 
   // Each argument will be passed by writing it into gTheArgsP[i].
   unsigned i = 0, idx = 2;
@@ -301,12 +300,13 @@ Function *ExternalDispatcherImpl::createDispatcher(KCallable *target,
       idx++;
 
     auto argI64p =
-        Builder.CreateGEP(argI64s->getType()->getPointerElementType(), argI64s,
+        Builder.CreateGEP(ptrTy, argI64s,
                           ConstantInt::get(Type::getInt32Ty(ctx), idx));
 
-    auto argp = Builder.CreateBitCast(argI64p, PointerType::getUnqual(argTy));
+    auto ptrTy2 = PointerType::getUnqual(argTy);
+    auto argp = Builder.CreateBitCast(argI64p, ptrTy2);
     args[i] =
-        Builder.CreateLoad(argp->getType()->getPointerElementType(), argp);
+        Builder.CreateLoad(ptrTy2, argp);
 
     unsigned argSize = argTy->getPrimitiveSizeInBits();
     idx += ((!!argSize ? argSize : 64) + 63) / 64;
