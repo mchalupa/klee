@@ -84,7 +84,11 @@ ref<Expr> MemoryObject::getSymbolicAddress(klee::ArrayCache &array) {
   if (!symbolicAddress) {
     initializeSymbolicArray(array);
   }
+#if LLVM_VERSION_MAJOR < 16
   return symbolicAddress.getValue();
+#else
+  return symbolicAddress.value();
+#endif
 }
 
 /***/

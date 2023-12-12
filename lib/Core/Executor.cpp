@@ -4647,8 +4647,13 @@ void Executor::callExternalFunction(ExecutionState &state,
 
       if (rl.size() == 1) {
         value = KValue(rl[0].first->getSegmentExpr(),
-                       ConstantExpr::alloc(calculatedOffset.getValue(),
-                                           Context::get().getPointerWidth()));
+                       ConstantExpr::alloc(
+#if LLVM_VERSION_MAJOR < 16
+                           calculatedOffset.getValue(),
+#else
+                           calculatedOffset.value(),
+#endif
+                           Context::get().getPointerWidth()));
       } else {
         value = returnVal;
       }
@@ -4875,8 +4880,13 @@ void Executor::executeMemoryOperation(ExecutionState &state,
     ref<Expr> segment;
     if (offsetVal) {
       segment = ConstantExpr::alloc(mo->segment, Expr::Int64);
-      offset = ConstantExpr::alloc(offsetVal.getValue(),
-                                   Context::get().getPointerWidth());
+      offset = ConstantExpr::alloc(
+#if LLVM_VERSION_MAJOR < 16
+              offsetVal.getValue(),
+#else
+              offsetVal.value(),
+#endif
+              Context::get().getPointerWidth());
     } else {
       segment = address.getSegment();
       offset = address.getOffset();

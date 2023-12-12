@@ -358,7 +358,14 @@ void AddressSpace::writeToWOS(ExecutionState &state, TimingSolver *solver,
     llvm::Optional<uint64_t> offset;
     resolveAddressWithOffset(state, solver, written.getValue(), rl, offset);
     if (!rl.empty()) {
-      auto result = KValue(rl[0].first->getSegmentExpr(), ConstantExpr::alloc(offset.getValue(), Context::get().getPointerWidth()));
+      auto result = KValue(rl[0].first->getSegmentExpr(),
+                           ConstantExpr::alloc(
+#if LLVM_VERSION_MAJOR < 16
+                               offset.getValue(),
+#else
+                               offset.value(),
+#endif
+                               Context::get().getPointerWidth()));
       wos->write(0, result);
       return;
     }
