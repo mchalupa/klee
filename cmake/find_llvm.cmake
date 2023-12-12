@@ -69,6 +69,19 @@ else()
     set(${output_var} ${${output_var}} PARENT_SCOPE)
   endfunction()
 
+  function(_run_llvm_config_may_fail output_var)
+    set(_command "${LLVM_CONFIG_BINARY}" ${ARGN})
+    execute_process(COMMAND ${_command}
+      RESULT_VARIABLE _exit_code
+      OUTPUT_VARIABLE ${output_var}
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      ERROR_STRIP_TRAILING_WHITESPACE
+    )
+    set(${output_var} ${${output_var}} PARENT_SCOPE)
+  endfunction()
+
+
+
   # Get LLVM version
   _run_llvm_config(LLVM_PACKAGE_VERSION "--version")
   # Try x.y.z patern
@@ -153,7 +166,7 @@ else()
   _run_llvm_config(LLVM_TOOLS_BINARY_DIR "--bindir")
   _run_llvm_config(TARGET_TRIPLE "--host-target")
 
-  _run_llvm_config(LLVM_BUILD_MAIN_SRC_DIR "--src-root")
+  _run_llvm_config_may_fail(LLVM_BUILD_MAIN_SRC_DIR "--src-root")
   if (NOT EXISTS "${LLVM_BUILD_MAIN_SRC_DIR}")
     set(LLVM_BUILD_MAIN_SRC_DIR "")
   endif()
