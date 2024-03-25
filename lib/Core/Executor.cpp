@@ -5406,7 +5406,11 @@ size_t Executor::getAllocationAlignment(const llvm::Value *allocSite) const {
   // FIXME: 8 was the previous default. We shouldn't hard code this
   // and should fetch the default from elsewhere.
   const size_t forcedAlignment = 8;
+#if LLVM_VERSION_MAJOR <= 14
   size_t alignment = 0;
+#else
+  llvm::Align alignment = 0;
+#endif
   llvm::Type *type = NULL;
   std::string allocationSiteName(allocSite->getName().str());
   if (const GlobalObject *GO = dyn_cast<GlobalObject>(allocSite)) {
@@ -5420,7 +5424,11 @@ size_t Executor::getAllocationAlignment(const llvm::Value *allocSite) const {
       type = GO->getType();
     }
   } else if (const AllocaInst *AI = dyn_cast<AllocaInst>(allocSite)) {
+#if LLVM_VERSION_MAJOR <= 14
     alignment = AI->getAlignment();
+#else
+    alignment = AI->getAlign();
+#endif
     type = AI->getAllocatedType();
   } else if (isa<InvokeInst>(allocSite) || isa<CallInst>(allocSite)) {
     // FIXME: Model the semantics of the call to use the right alignment
