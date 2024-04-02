@@ -588,9 +588,8 @@ static std::string getDecl(const std::string& fun, unsigned bitwidth,
 
 std::string KleeHandler::dumpPath(const ExecutionState& state) {
   if (!m_pathWriter) {
-    m_pathWriter = new TreeStreamWriter(getOutputFilename("paths.ts"));
-    assert(m_pathWriter->good());
-    m_interpreter->setPathWriter(m_pathWriter);
+    klee_warning_once(nullptr, "-write-path not specified, not dumping the path\n");
+    return "";
   }
 
   assert(m_pathWriter);
@@ -600,7 +599,7 @@ std::string KleeHandler::dumpPath(const ExecutionState& state) {
   m_pathWriter->readStream(m_interpreter->getPathStreamID(state),
                            concreteBranches);
 
-  std::string path = getOutputFilename("path-1" + std::to_string(num) + ".path");
+  std::string path = getOutputFilename("path-" + std::to_string(++num) + ".path");
   auto f = openFileForPath(path);
   if (f) {
     for (const auto &branch : concreteBranches) {
