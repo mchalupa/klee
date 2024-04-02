@@ -1383,6 +1383,10 @@ Executor::toConstant(ExecutionState &state,
   else
     klee_warning_once(reason, "%s", os.str().c_str());
 
+
+  const auto& pathfile = interpreterHandler->dumpPath(state);
+  klee_warning("Dumped unfinished path to file: %s", pathfile.c_str());
+
   addConstraint(state, EqExpr::create(e, value));
     
   return value;
