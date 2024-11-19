@@ -4560,6 +4560,12 @@ void Executor::callExternalFunction(ExecutionState &state,
         terminateStateOnExecError(state,
                                   "external call with symbolic argument: " +
                                   callable->getName());
+
+        if (callable->getName() == "sin" || callable->getName() == "cos") {
+            const auto& pathfile = interpreterHandler->dumpPath(state);
+            klee_warning("Dumped unfinished path to file: %s", pathfile.c_str());
+        }
+
         return;
       }
     }
