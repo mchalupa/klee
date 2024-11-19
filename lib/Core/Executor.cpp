@@ -1383,6 +1383,10 @@ Executor::toConstant(ExecutionState &state,
   else
     klee_warning_once(reason, "%s", os.str().c_str());
 
+
+  const auto& pathfile = interpreterHandler->dumpPath(state);
+  klee_warning("Dumped unfinished path to file: %s", pathfile.c_str());
+
   addConstraint(state, EqExpr::create(e, value));
     
   return value;
@@ -5489,7 +5493,11 @@ size_t Executor::getAllocationAlignment(const llvm::Value *allocSite) const {
   // FIXME: 8 was the previous default. We shouldn't hard code this
   // and should fetch the default from elsewhere.
   const size_t forcedAlignment = 8;
+#if LLVM_VERSION_MAJOR <= 14
   size_t alignment = 0;
+#else
+  llvm::Align alignment = 0;
+#endif
   llvm::Type *type = NULL;
   std::string allocationSiteName(allocSite->getName().str());
   if (const GlobalObject *GO = dyn_cast<GlobalObject>(allocSite)) {
@@ -5505,8 +5513,10 @@ size_t Executor::getAllocationAlignment(const llvm::Value *allocSite) const {
   } else if (const AllocaInst *AI = dyn_cast<AllocaInst>(allocSite)) {
 #if LLVM_VERSION_MAJOR >= 15
     alignment = AI->getAlign().value();
-#else
+#elif LLVM_VERSION_MAJOR <= 14
     alignment = AI->getAlignment();
+#else
+    alignment = AI->getAlign();
 #endif
     type = AI->getAllocatedType();
   } else if (isa<InvokeInst>(allocSite) || isa<CallInst>(allocSite)) {

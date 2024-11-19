@@ -48,6 +48,8 @@ public:
   virtual void processTestCase(const ExecutionState &state,
                                const char *err,
                                const char *suffix) = 0;
+
+  virtual std::string dumpPath(const ExecutionState& state) = 0;
 };
 
 class Interpreter {

@@ -116,8 +116,14 @@ static void AddStandardCompilePasses(legacy::PassManager &PM) {
 
   if (!DisableInline)
     addPass(PM, createFunctionInliningPass());   // Inline small functions
-#if LLVM_VERSION_MAJOR < 15
-  addPass(PM, createArgumentPromotionPass());    // Scalarize uninlined fn args
+  // If we didn't decide to inline a function, check to see if we can
+  // transform it to pass arguments by value instead of by reference.
+#if LLVM_VERSION_MAJOR <= 14
+  addPass(PM, createArgumentPromotionPass());
+#else
+  // this is not exacly that the argument promotion pass does, but close enough for us
+  addPass(PM, createFunctionSpecializationPass());
+  addPass(PM, createDeadArgEliminationPass());
 #endif
 
   addPass(PM, createInstructionCombiningPass()); // Cleanup for scalarrepl.
@@ -131,7 +137,7 @@ static void AddStandardCompilePasses(legacy::PassManager &PM) {
   addPass(PM, createReassociatePass());          // Reassociate expressions
   addPass(PM, createLoopRotatePass());
   addPass(PM, createLICMPass());                 // Hoist loop invariants
-#if LLVM_VERSION_MAJOR < 15
+#if LLVM_VERSION_MAJOR <= 14
   addPass(PM, createLoopUnswitchPass());         // Unswitch loops.
 #endif
   // FIXME : Removing instcombine causes nestedloop regression.
@@ -219,8 +225,12 @@ void Optimize(Module *M, llvm::ArrayRef<const char *> preservedFunctions) {
 
   // If we didn't decide to inline a function, check to see if we can
   // transform it to pass arguments by value instead of by reference.
-#if LLVM_VERSION_MAJOR < 15
+#if LLVM_VERSION_MAJOR <= 14
   addPass(Passes, createArgumentPromotionPass());
+#else
+  // this is not exacly that the argument promotion pass does, but close enough for us
+  addPass(Passes, createFunctionSpecializationPass());
+  addPass(Passes, createDeadArgEliminationPass());
 #endif
 
   // The IPO passes may leave cruft around.  Clean up after them.
