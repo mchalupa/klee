@@ -4402,6 +4402,12 @@ void Executor::callExternalFunction(ExecutionState &state,
       !okExternals.count(callable->getName().str())) {
     Type *retTy = nullptr;
     if (auto *iasm = dyn_cast<InlineAsm>(callable->getValue())) {
+        if (iasm->hasSideEffects()) {
+            // this one is not pure
+            terminateStateOnExecError(state,
+                                      "asm with side effects: " + callable->getName());
+            return;
+        }
         retTy = iasm->getFunctionType()->getReturnType();
     } else {
       assert(func);
