@@ -40,6 +40,7 @@ set(SRC_FILES
         strerror.c
         strtok.c
         time.c
+        setlocale.c
         tolower.c
         toupper.c
 	getenv.c

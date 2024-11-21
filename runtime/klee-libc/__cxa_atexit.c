@@ -29,16 +29,18 @@ static void RunAtExit(void) {
 int __cxa_atexit(void (*fn)(void*),
                  void *arg,
                  void *dso_handle) {
-  klee_warning_once("FIXME: __cxa_atexit being ignored");
+  //klee_warning_once("FIXME: __cxa_atexit being ignored");
   
   /* Better to just report an error here than return 1 (the defined
    * semantics).
    */
-  if (NumAtExit == MAX_ATEXIT)
+  if (NumAtExit == MAX_ATEXIT) {
     klee_report_error(__FILE__,
                       __LINE__,
                       "__cxa_atexit: no room in array!",
                       "exec.err");
+    return 1;
+  }
   
   AtExit[NumAtExit].fn = fn;
   AtExit[NumAtExit].arg = arg;

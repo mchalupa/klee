@@ -183,6 +183,7 @@ namespace klee {
     HANDLER(handlePthreadCreate);
     HANDLER(handlePthreadJoin);
     HANDLER(handleUnsupportedPthread);
+    HANDLER(unsupportedFunction);
     HANDLER(handleScanf);
     HANDLER(handleFscanf);
 #undef HANDLER

@@ -188,6 +188,8 @@ static SpecialFunctionHandler::HandlerInfo handlerInfo[] = {
     add("__isoc99_fscanf", handleFscanf, true),
     add("__isoc99_sscanf", handleFscanf, true),
     add("__isoc99_swscanf", handleFscanf, true),
+    add("getopt", unsupportedFunction, true),
+    add("getopt_long", unsupportedFunction, true),
 
 #undef addDNR
 #undef add
@@ -1347,6 +1349,12 @@ void SpecialFunctionHandler::handleUnsupportedPthread(ExecutionState &state,
                                                       const std::vector<Cell> &arguments) {
   executor.terminateStateOnExecError(state,
         "unsupported pthread API.");
+}
+
+void SpecialFunctionHandler::unsupportedFunction(ExecutionState &state,
+                                                 KInstruction *target,
+                                                 const std::vector<Cell> &arguments) {
+    executor.terminateStateOnExecError(state, "unsupported function model");
 }
 
 void SpecialFunctionHandler::handleScanf(ExecutionState &state,
