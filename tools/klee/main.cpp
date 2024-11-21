@@ -594,7 +594,7 @@ static std::string getDecl(const std::string& fun, unsigned bitwidth,
 
 std::string KleeHandler::dumpPath(const ExecutionState& state) {
   if (!m_pathWriter) {
-    klee_warning_once(nullptr, "-write-path not specified, not dumping the path\n");
+    klee_warning_once(nullptr, "-write-path not specified, not dumping paths\n");
     return "";
   }
 

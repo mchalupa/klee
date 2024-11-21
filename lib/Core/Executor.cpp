@@ -1385,7 +1385,8 @@ Executor::toConstant(ExecutionState &state,
 
 
   const auto& pathfile = interpreterHandler->dumpPath(state);
-  klee_warning("Dumped unfinished path to file: %s", pathfile.c_str());
+  if (!pathfile.empty())
+    klee_warning("Dumped unfinished path to file: %s", pathfile.c_str());
 
   addConstraint(state, EqExpr::create(e, value));
     
@@ -4569,7 +4570,8 @@ void Executor::callExternalFunction(ExecutionState &state,
 
         if (callable->getName() == "sin" || callable->getName() == "cos") {
             const auto& pathfile = interpreterHandler->dumpPath(state);
-            klee_warning("Dumped unfinished path to file: %s", pathfile.c_str());
+            if (!pathfile.empty())
+                klee_warning("Dumped unfinished path to file: %s", pathfile.c_str());
         }
 
         return;
