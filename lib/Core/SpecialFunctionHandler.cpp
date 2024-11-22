@@ -188,6 +188,8 @@ static SpecialFunctionHandler::HandlerInfo handlerInfo[] = {
     add("__isoc99_fscanf", handleFscanf, true),
     add("__isoc99_sscanf", handleFscanf, true),
     add("__isoc99_swscanf", handleFscanf, true),
+    add("socket", unsupportedFunction, true),
+    add("connect", unsupportedFunction, true),
     add("getopt", unsupportedFunction, true),
     add("getopt_long", unsupportedFunction, true),
     add("ferror_unlocked", unsupportedFunction, true),
