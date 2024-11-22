@@ -36,11 +36,11 @@ set(SRC_FILES
         strtol.c
         strtoul.c
         strtoull.c
-        strtoumax.c
         strerror.c
         strtok.c
         time.c
         setlocale.c
+	textdomain.c
         tolower.c
         toupper.c
 	getenv.c

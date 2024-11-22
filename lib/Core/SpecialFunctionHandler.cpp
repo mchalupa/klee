@@ -190,6 +190,7 @@ static SpecialFunctionHandler::HandlerInfo handlerInfo[] = {
     add("__isoc99_swscanf", handleFscanf, true),
     add("getopt", unsupportedFunction, true),
     add("getopt_long", unsupportedFunction, true),
+    add("ferror_unlocked", unsupportedFunction, true),
 
 #undef addDNR
 #undef add
